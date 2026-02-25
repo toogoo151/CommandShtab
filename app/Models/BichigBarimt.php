@@ -30,6 +30,7 @@ class BichigBarimt extends Model
         'fileSize',
         'ognoo',
         'hariuOgnoo',
+        'hugatsaaHetersen',
         'description',
     ];
 
@@ -39,9 +40,9 @@ class BichigBarimt extends Model
 
     /**
      * Баримт бичгийн жагсаалтыг буцаана.
-     * @param bool $filterByDivision Ирсэн бичиг хэсэгт: нэвтэрсэн админы divisionID-тай таарсан destinationTypeID-тэй өгөгдлийг л харуулах
+     * @param string|false $sourceFilter 'irsen' = Ирсэн: destinationTypeID=divisionID; 'ywsan' = Явсан (userType=2 админд): sourceTypeID=divisionID
      */
-    public function getBarimtBichig($filterByDivision = false)
+    public function getBarimtBichig($sourceFilter = false)
     {
         try {
             $query = DB::table('csh_bichig')
@@ -52,10 +53,15 @@ class BichigBarimt extends Model
                 ->leftJoin('main_division as source_division', 'source_division.id', '=', 'csh_bichig.sourceTypeID')
                 ->leftJoin('main_division as dest_division', 'dest_division.id', '=', 'csh_bichig.destinationTypeID');
 
-            if ($filterByDivision && Auth::check()) {
+            if (Auth::check()) {
                 $divisionID = Auth::user()->divisionID ?? null;
+                $userType = Auth::user()->userType ?? Auth::user()->user_type ?? null;
                 if ($divisionID !== null) {
-                    $query->where('csh_bichig.destinationTypeID', $divisionID);
+                    if ($sourceFilter === 'irsen') {
+                        $query->where('csh_bichig.destinationTypeID', $divisionID);
+                    } elseif ($sourceFilter === 'ywsan' && (int) $userType === 2) {
+                        $query->where('csh_bichig.sourceTypeID', $divisionID);
+                    }
                 }
             }
 

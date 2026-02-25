@@ -25,7 +25,7 @@ const HariuNew = ({ bichigID, refreshHariu, onClose }) => {
     const fileInputRef = useRef(null);
 
     const formSchema = Yup.object().shape({
-        destinationTypeID: Yup.array().of(Yup.string().required()).min(2, "Хаашаа явсан дор хаяж 2 бүтцийн нэгж сонгоно уу."),
+        destinationTypeID: Yup.array().of(Yup.string().required()).min(1, "Хаашаа явсан дор хаяж 1 бүтцийн нэгж сонгоно уу."),
         dugaar: Yup.string().required("Дугаар оруулна уу."),
         aguulga: Yup.string().required("Агуулга оруулна уу."),
         ognoo: Yup.string().required("Огноо оруулна уу."),
@@ -79,7 +79,7 @@ const HariuNew = ({ bichigID, refreshHariu, onClose }) => {
     const onSubmit = (data) => {
         if (!bichigID) return Swal.fire("Бичиг сонгогдоогүй байна.");
         const destIds = destinationTypeIDs.length ? destinationTypeIDs : (Array.isArray(data.destinationTypeID) ? data.destinationTypeID : []);
-        if (destIds.length < 2) return Swal.fire("Хаашаа явсан хэсэгт дор хаяж 2 бүтцийн нэгж сонгоно уу.");
+        if (destIds.length < 1) return Swal.fire("Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.");
         const formData = new FormData();
         formData.append("bichigID", bichigID);
         destIds.forEach((id) => formData.append("destinationTypeID[]", id));
@@ -126,8 +126,8 @@ const HariuNew = ({ bichigID, refreshHariu, onClose }) => {
                                     <p className="alerts">{errors.dugaar?.message}</p>
                                 </div>
                                 <div className="col-md-6">
-                                    <label>Огноо</label>
-                                    <input type="date" className="form-control mb-2" {...register("ognoo")} />
+                                    <label>Огноо, цаг</label>
+                                    <input type="datetime-local" className="form-control mb-2" {...register("ognoo")} />
                                     <p className="alerts">{errors.ognoo?.message}</p>
                                 </div>
                             </div>
@@ -140,7 +140,7 @@ const HariuNew = ({ bichigID, refreshHariu, onClose }) => {
                             </div>
                             <div className="row">
                                 <div className="col-md-12">
-                                    <label>Хаашаа явсан (дор хаяж 2 бүтцийн нэгж сонгоно)</label>
+                                    <label>Хаашаа явсан (дор хаяж 1 бүтцийн нэгж сонгоно)</label>
                                     <div className="border rounded p-2 mb-2" style={{ maxHeight: "160px", overflowY: "auto" }}>
                                         {divisions.map((d) => (
                                             <div key={d.id} className="custom-control custom-checkbox">

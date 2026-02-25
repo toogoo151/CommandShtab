@@ -238,7 +238,7 @@ const IrsenBichigIndex = () => {
                                     buttonName={"Нэмэх"}
                                     excelDownloadData={sortedData}
                                     excelHeaders={excelHeaders}
-                                    isHideInsert={true}
+                                    isHideInsert={false}
                                 />
                             }
                             avgColumnIndex={-1}
@@ -246,8 +246,8 @@ const IrsenBichigIndex = () => {
                             avgName={"Дундаж: "}
                             getRowsSelected={getRowsSelected}
                             setRowsSelected={setRowsSelected}
-                            isHideDelete={true}
-                            isHideEdit={true}
+                            isHideDelete={false}
+                            isHideEdit={false}
                         />
 
                         {selectedBichig && (

@@ -132,7 +132,7 @@ const YwsanEdit = ({ changeDataRow, refreshData, setRowsSelected }) => {
         if (!dugaar?.trim()) return Swal.fire("Дугаар оруулна уу.");
         if (!aguulga?.trim()) return Swal.fire("Агуулга оруулна уу.");
         if (!ognoo) return Swal.fire("Огноо оруулна уу.");
-        if (destinationTypeIDs.length < 2) return Swal.fire("Хаашаа явсан хэсэгт дор хаяж 2 бүтцийн нэгж сонгоно уу.");
+        if (destinationTypeIDs.length < 1) return Swal.fire("Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.");
         if (hariutaiEseh === "2" && (hariuOgnoo === "" || hariuOgnoo == null)) {
             return Swal.fire("Хариу өгөх хугацаа оруулна уу.");
         }
@@ -256,7 +256,7 @@ const YwsanEdit = ({ changeDataRow, refreshData, setRowsSelected }) => {
                         <div className="row">
 
                             <div className="col-md-12">
-                                <label>Хаашаа явсан (дор хаяж 2 бүтцийн нэгж сонгоно)</label>
+                                <label>Хаашаа явсан (дор хаяж 1 бүтцийн нэгж сонгоно)</label>
                                 <div className="border rounded p-2 mb-2" style={{ maxHeight: "160px", overflowY: "auto" }}>
                                     {divisions.map((d) => (
                                         <div key={d.id} className="custom-control custom-checkbox">

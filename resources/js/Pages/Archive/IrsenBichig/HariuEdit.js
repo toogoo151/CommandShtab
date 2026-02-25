@@ -26,7 +26,7 @@ const HariuEdit = ({ changeDataRow, isEditBtnClick, refreshHariu, setHariuRowsSe
     const fileInputRef = useRef(null);
 
     const formSchema = Yup.object().shape({
-        destinationTypeID: Yup.array().of(Yup.string().required()).min(2, "Хаашаа явсан дор хаяж 2 бүтцийн нэгж сонгоно уу."),
+        destinationTypeID: Yup.array().of(Yup.string().required()).min(1, "Хаашаа явсан дор хаяж 1 бүтцийн нэгж сонгоно уу."),
         dugaar: Yup.string().required("Дугаар оруулна уу."),
         aguulga: Yup.string().required("Агуулга оруулна уу."),
         ognoo: Yup.string().required("Огноо оруулна уу."),
@@ -65,7 +65,7 @@ const HariuEdit = ({ changeDataRow, isEditBtnClick, refreshHariu, setHariuRowsSe
                 setValue("dugaar", first.dugaar ?? "");
                 setValue("aguulga", first.aguulga ?? "");
                 const o = first.ognoo;
-                setValue("ognoo", o ? (typeof o === "string" ? o.slice(0, 10) : new Date(o).toISOString().slice(0, 10)) : "");
+                setValue("ognoo", o ? (typeof o === "string" ? o.replace(" ", "T").slice(0, 16) : new Date(o).toISOString().slice(0, 16)) : "");
                 setValue("description", first.description ?? "");
                 const pdf = first.pdf;
                 setKeepPdfPaths(pdf ? pdf.split(";").filter((f) => f.trim()) : []);
@@ -77,7 +77,7 @@ const HariuEdit = ({ changeDataRow, isEditBtnClick, refreshHariu, setHariuRowsSe
                 setValue("dugaar", changeDataRow.dugaar ?? "");
                 setValue("aguulga", changeDataRow.aguulga ?? "");
                 const o = changeDataRow.ognoo;
-                setValue("ognoo", o ? (typeof o === "string" ? o.slice(0, 10) : new Date(o).toISOString().slice(0, 10)) : "");
+                setValue("ognoo", o ? (typeof o === "string" ? o.replace(" ", "T").slice(0, 16) : new Date(o).toISOString().slice(0, 16)) : "");
                 setValue("description", changeDataRow.description ?? "");
                 setKeepPdfPaths(changeDataRow.pdf ? changeDataRow.pdf.split(";").filter((f) => f.trim()) : []);
                 setSelectedFile([]);
@@ -102,7 +102,7 @@ const HariuEdit = ({ changeDataRow, isEditBtnClick, refreshHariu, setHariuRowsSe
 
     const onSubmit = (data) => {
         const destIds = destinationTypeIDs.length ? destinationTypeIDs : (Array.isArray(data.destinationTypeID) ? data.destinationTypeID : []);
-        if (destIds.length < 2) return Swal.fire("Хаашаа явсан хэсэгт дор хаяж 2 бүтцийн нэгж сонгоно уу.");
+        if (destIds.length < 1) return Swal.fire("Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.");
         const formData = new FormData();
         groupIds.forEach((id) => formData.append("ids[]", id));
         destIds.forEach((id) => formData.append("destinationTypeID[]", id));
@@ -149,8 +149,8 @@ const HariuEdit = ({ changeDataRow, isEditBtnClick, refreshHariu, setHariuRowsSe
                                     <p className="alerts">{errors.dugaar?.message}</p>
                                 </div>
                                 <div className="col-md-6">
-                                    <label>Огноо</label>
-                                    <input type="date" className="form-control mb-2" {...register("ognoo")} />
+                                    <label>Огноо, цаг</label>
+                                    <input type="datetime-local" className="form-control mb-2" {...register("ognoo")} />
                                     <p className="alerts">{errors.ognoo?.message}</p>
                                 </div>
                             </div>
@@ -163,7 +163,7 @@ const HariuEdit = ({ changeDataRow, isEditBtnClick, refreshHariu, setHariuRowsSe
                             </div>
                             <div className="row">
                                 <div className="col-md-12">
-                                    <label>Хаашаа явсан (дор хаяж 2 бүтцийн нэгж сонгоно)</label>
+                                    <label>Хаашаа явсан (дор хаяж 1 бүтцийн нэгж сонгоно)</label>
                                     <div className="border rounded p-2 mb-2" style={{ maxHeight: "160px", overflowY: "auto" }}>
                                         {divisions.map((d) => (
                                             <div key={d.id} className="custom-control custom-checkbox">

@@ -44,7 +44,7 @@ export default function AsideMenu() {
             type: "menu",
             title: "Бүтэц",
             icon: "fa fa-user",
-            level: [1, 2, 3],
+            level: [1],
             subMenu: [
                 {
                     name: "Бүтцийн нэгжүүд",

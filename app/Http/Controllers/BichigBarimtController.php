@@ -28,7 +28,7 @@ class BichigBarimtController extends Controller
                 'pdf.*' => 'file|mimes:pdf,doc,docx|max:51200',
             ];
             if ($isYwsan) {
-                $rules['destinationTypeID'] = 'required|array|min:2';
+                $rules['destinationTypeID'] = 'required|array|min:1';
                 $rules['destinationTypeID.*'] = 'required';
             } else {
                 $rules['catID'] = 'required';
@@ -42,7 +42,7 @@ class BichigBarimtController extends Controller
                 'typeID.required' => 'Баримт бичгийн төрөл сонгоно уу.',
                 'secretID.required' => 'Нууцлал сонгоно уу.',
                 'sourceTypeID.required' => 'Хаанаас ирсэн сонгоно уу.',
-                'destinationTypeID.required' => 'Хаашаа явсан дор хаяж 2 нэгж сонгоно уу.',
+                'destinationTypeID.required' => 'Хаашаа явсан дор хаяж 1 нэгж сонгоно уу.',
                 'destinationTypeID.*.required' => 'Хаашаа явсан сонгоно уу.',
                 'dugaar.required' => 'Дугаар оруулна уу.',
                 'aguulga.required' => 'Агуулга оруулна уу.',
@@ -52,8 +52,8 @@ class BichigBarimtController extends Controller
             $destinationIds = $isYwsan
                 ? (array) $req->input('destinationTypeID', [])
                 : [(string) $req->destinationTypeID];
-            if ($isYwsan && count($destinationIds) < 2) {
-                return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 2 бүтцийн нэгж сонгоно уу.'], 422);
+            if ($isYwsan && count($destinationIds) < 1) {
+                return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.'], 422);
             }
 
             if ($req->hariutaiEseh == '2' && ($req->hariuOgnoo === null || $req->hariuOgnoo === '')) {
@@ -163,7 +163,7 @@ class BichigBarimtController extends Controller
             if ($isYwsan) {
                 $rules['ids'] = 'required|array|min:1';
                 $rules['ids.*'] = 'required|exists:csh_bichig,id';
-                $rules['destinationTypeID'] = 'required|array|min:2';
+                $rules['destinationTypeID'] = 'required|array|min:1';
                 $rules['destinationTypeID.*'] = 'required';
             } else {
                 $rules['id'] = 'required|exists:csh_bichig,id';
@@ -177,7 +177,7 @@ class BichigBarimtController extends Controller
                 'typeID.required' => 'Баримт бичгийн төрөл сонгоно уу.',
                 'secretID.required' => 'Нууцлал сонгоно уу.',
                 'sourceTypeID.required' => 'Хаанаас ирсэн сонгоно уу.',
-                'destinationTypeID.required' => 'Хаашаа явсан дор хаяж 2 нэгж сонгоно уу.',
+                'destinationTypeID.required' => 'Хаашаа явсан дор хаяж 1 нэгж сонгоно уу.',
                 'destinationTypeID.*.required' => 'Хаашаа явсан сонгоно уу.',
                 'dugaar.required' => 'Дугаар оруулна уу.',
                 'aguulga.required' => 'Агуулга оруулна уу.',
@@ -200,8 +200,8 @@ class BichigBarimtController extends Controller
             if ($isYwsan) {
                 $ids = (array) $req->input('ids', []);
                 $destinationIds = (array) $req->input('destinationTypeID', []);
-                if (count($destinationIds) < 2) {
-                    return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 2 бүтцийн нэгж сонгоно уу.'], 422);
+                if (count($destinationIds) < 1) {
+                    return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.'], 422);
                 }
 
                 $first = BichigBarimt::findOrFail($ids[0]);

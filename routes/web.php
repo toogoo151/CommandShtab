@@ -207,8 +207,9 @@ Route::post("/delete/bichig/angilal", [BichigAngilalController::class, "DeleteBi
 //Баримт бичиг (csh_bichig) start
 Route::get("/get/bichig", function (\Illuminate\Http\Request $req) {
     $bichig = new BichigBarimt();
-    $filterByDivision = $req->query('source') === 'irsen';
-    return $bichig->getBarimtBichig($filterByDivision);
+    $source = $req->query('source');
+    $sourceFilter = ($source === 'irsen' || $source === 'ywsan') ? $source : false;
+    return $bichig->getBarimtBichig($sourceFilter);
 });
 Route::post("/new/bichig", [BichigBarimtController::class, "NewBichigBarimt"])
     ->middleware('auth');

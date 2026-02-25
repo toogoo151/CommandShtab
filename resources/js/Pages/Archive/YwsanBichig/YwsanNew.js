@@ -35,7 +35,7 @@ const YwsanNew = ({ refreshData }) => {
         sourceTypeID: Yup.string().required("Хаанаас ирсэн (админы нэгж) тохируулагдаагүй байна."),
         destinationTypeID: Yup.array()
             .of(Yup.string().required())
-            .min(2, "Хаашаа явсан дор хаяж 2 бүтцийн нэгж сонгоно уу."),
+            .min(1, "Хаашаа явсан дор хаяж 1 бүтцийн нэгж сонгоно уу."),
         dugaar: Yup.string().required("Дугаар оруулна уу."),
         aguulga: Yup.string().required("Агуулга оруулна уу."),
         ognoo: Yup.string().required("Огноо оруулна уу."),
@@ -285,7 +285,7 @@ const YwsanNew = ({ refreshData }) => {
 
                             <div className="row">
                                 <div className="col-md-12">
-                                    <label>Хаашаа явсан (дор хаяж 2 бүтцийн нэгж сонгоно)</label>
+                                    <label>Хаашаа явсан (дор хаяж 1 бүтцийн нэгж сонгоно)</label>
                                     <div className="border rounded p-2 mb-2" style={{ maxHeight: "160px", overflowY: "auto" }}>
                                         {divisions.map((d) => (
                                             <div key={d.id} className="custom-control custom-checkbox">
