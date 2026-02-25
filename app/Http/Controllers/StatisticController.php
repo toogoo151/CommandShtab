@@ -278,11 +278,7 @@ NOW()
     public function barimtbichigGraphic(Request $request)
     {
 
-        $baingaYears = DB::table('csh_bichig')
-    
-
-
-      
+        $baingaYears = DB::table('csh_bichig');
     }
 
     /**
