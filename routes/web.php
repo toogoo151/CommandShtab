@@ -242,7 +242,9 @@ Route::get("/get/bichig", function (\Illuminate\Http\Request $req) {
     $bichig = new BichigBarimt();
     $source = $req->query('source');
     $sourceFilter = ($source === 'irsen' || $source === 'ywsan') ? $source : false;
-    return $bichig->getBarimtBichig($sourceFilter);
+    $hariuFilter = $req->query('hariuFilter');
+    $hariuFilter = ($hariuFilter === 'irsen' || $hariuFilter === 'ireeguu') ? $hariuFilter : null;
+    return $bichig->getBarimtBichig($sourceFilter, $hariuFilter);
 });
 Route::post("/new/bichig", [BichigBarimtController::class, "NewBichigBarimt"])
     ->middleware('auth');

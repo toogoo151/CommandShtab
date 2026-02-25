@@ -41,8 +41,9 @@ class BichigBarimt extends Model
     /**
      * Баримт бичгийн жагсаалтыг буцаана.
      * @param string|false $sourceFilter 'irsen' = Ирсэн: destinationTypeID=divisionID; 'ywsan' = Явсан (userType=2 админд): sourceTypeID=divisionID
+     * @param string|null $hariuFilter Явсан хэсэгт: 'irsen' = csh_bichig_hariu байгаа; 'ireeguu' = csh_bichig_hariu байхгүй
      */
-    public function getBarimtBichig($sourceFilter = false)
+    public function getBarimtBichig($sourceFilter = false, $hariuFilter = null)
     {
         try {
             $query = DB::table('csh_bichig')
@@ -56,13 +57,33 @@ class BichigBarimt extends Model
             if (Auth::check()) {
                 $divisionID = Auth::user()->divisionID ?? null;
                 $userType = Auth::user()->userType ?? Auth::user()->user_type ?? null;
+                $userTypeID = Auth::user()->userTypeID ?? null;
+                $isSuperAdmin = (int) ($userTypeID ?? $userType) === 1;
                 if ($divisionID !== null) {
                     if ($sourceFilter === 'irsen') {
-                        $query->where('csh_bichig.destinationTypeID', $divisionID);
+                        // userTypeID=1 үед бүх csh_bichig харуулна
+                        if (!$isSuperAdmin) {
+                            $query->where('csh_bichig.destinationTypeID', $divisionID);
+                        }
                     } elseif ($sourceFilter === 'ywsan' && (int) $userType === 2) {
                         $query->where('csh_bichig.sourceTypeID', $divisionID);
                     }
                 }
+            }
+
+            // Явсан: Хариу баримт бичиг хайлт (csh_bichig_hariu.bichigID = csh_bichig.id)
+            if ($sourceFilter === 'ywsan' && $hariuFilter === 'irsen') {
+                $query->whereExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('csh_bichig_hariu')
+                        ->whereColumn('csh_bichig_hariu.bichigID', 'csh_bichig.id');
+                });
+            } elseif ($sourceFilter === 'ywsan' && $hariuFilter === 'ireeguu') {
+                $query->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('csh_bichig_hariu')
+                        ->whereColumn('csh_bichig_hariu.bichigID', 'csh_bichig.id');
+                });
             }
 
             return $query

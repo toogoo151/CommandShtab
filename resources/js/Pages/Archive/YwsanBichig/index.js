@@ -49,11 +49,13 @@ const YwsanBichigIndex = () => {
     const [belenBaidal, setBelenBaidal] = useState([]);
     const [divisions, setDivisions] = useState([]);
     const [filterHariutaiEseh, setFilterHariutaiEseh] = useState("");
+    const [filterHariuBichig, setFilterHariuBichig] = useState("");
     const [filterTypeID, setFilterTypeID] = useState("");
     const [filterSecretID, setFilterSecretID] = useState("");
     const [filterBelenBaidalID, setFilterBelenBaidalID] = useState("");
     const [filterDivisionID, setFilterDivisionID] = useState("");
     const [filterHuygatsaa, setFilterHuygatsaa] = useState("");
+    const [filterLevel, setFilterLevel] = useState("");
 
     useEffect(() => {
         axios.get("/get/bichig/type").then((r) => setTypes(normalize(r))).catch(() => setTypes([]));
@@ -69,6 +71,7 @@ const YwsanBichigIndex = () => {
         if (filterSecretID !== "") list = list.filter((r) => String(r.secretID) === filterSecretID);
         if (filterBelenBaidalID !== "") list = list.filter((r) => String(r.belenBaidalID) === filterBelenBaidalID);
         if (filterDivisionID !== "") list = list.filter((r) => String(r.sourceTypeID) === filterDivisionID);
+        if (filterLevel !== "") list = list.filter((r) => (r.level ?? "").toString().toLowerCase().includes(filterLevel.toLowerCase().trim()));
         let withStatus = list.map((row) => ({ ...row, _status: getRowStatus(row) }));
         if (filterHuygatsaa !== "") withStatus = withStatus.filter((r) => r._status === filterHuygatsaa);
         withStatus.sort((a, b) => sortOrder(a._status) - sortOrder(b._status));
@@ -76,11 +79,11 @@ const YwsanBichigIndex = () => {
             sortedData: withStatus,
             rowStatusList: withStatus.map((r) => r._status),
         };
-    }, [getData, filterHariutaiEseh, filterTypeID, filterSecretID, filterBelenBaidalID, filterDivisionID, filterHuygatsaa]);
+    }, [getData, filterHariutaiEseh, filterTypeID, filterSecretID, filterBelenBaidalID, filterDivisionID, filterHuygatsaa, filterLevel]);
 
     useEffect(() => {
         refreshData();
-    }, []);
+    }, [filterHariuBichig]);
 
     useEffect(() => {
         if (getRowsSelected[0] != undefined && sortedData.length > 0) {
@@ -105,8 +108,12 @@ const YwsanBichigIndex = () => {
     }, [clickedRowData?.id]);
 
     const refreshData = () => {
+        const params = { source: "ywsan" };
+        if (filterHariuBichig === "irsen" || filterHariuBichig === "ireeguu") {
+            params.hariuFilter = filterHariuBichig;
+        }
         axios
-            .get("/get/bichig", { params: { source: "ywsan" } })
+            .get("/get/bichig", { params })
             .then((res) => {
                 setRowsSelected([]);
                 setData(res.data);
@@ -159,7 +166,7 @@ const YwsanBichigIndex = () => {
                         <div className="card card-body mb-3">
                             <h6 className="mb-2">Хайлтын хэсэг</h6>
                             <div className="row mb-2">
-                                <div className="col-md-4">
+                                <div className="col-md-3">
                                     <label className="small">Хариутай эсэх</label>
                                     <select className="form-control form-control-sm" value={filterHariutaiEseh} onChange={(e) => setFilterHariutaiEseh(e.target.value)}>
                                         <option value="">Бүгд</option>
@@ -167,7 +174,15 @@ const YwsanBichigIndex = () => {
                                         <option value="2">Хариутай</option>
                                     </select>
                                 </div>
-                                <div className="col-md-4">
+                                <div className="col-md-3">
+                                    <label className="small">Хариу баримт бичиг</label>
+                                    <select className="form-control form-control-sm" value={filterHariuBichig} onChange={(e) => setFilterHariuBichig(e.target.value)}>
+                                        <option value="">Бүгд</option>
+                                        <option value="irsen">Ирсэн</option>
+                                        <option value="ireeguu">Ирээгүй</option>
+                                    </select>
+                                </div>
+                                <div className="col-md-3">
                                     <label className="small">Баримт бичгийн төрөл</label>
                                     <select className="form-control form-control-sm" value={filterTypeID} onChange={(e) => setFilterTypeID(e.target.value)}>
                                         <option value="">Бүгд</option>
@@ -176,7 +191,7 @@ const YwsanBichigIndex = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="col-md-4">
+                                <div className="col-md-3">
                                     <label className="small">Баримт бичгийн нууцлал</label>
                                     <select className="form-control form-control-sm" value={filterSecretID} onChange={(e) => setFilterSecretID(e.target.value)}>
                                         <option value="">Бүгд</option>
@@ -187,7 +202,11 @@ const YwsanBichigIndex = () => {
                                 </div>
                             </div>
                             <div className="row">
-                                <div className="col-md-4">
+                                <div className="col-md-3">
+                                    <label className="small">Үе шат</label>
+                                    <input type="text" className="form-control form-control-sm" value={filterLevel} onChange={(e) => setFilterLevel(e.target.value)} placeholder="Үе шатаар хайх" />
+                                </div>
+                                <div className="col-md-3">
                                     <label className="small">Бэлэн байдлын зэрэг</label>
                                     <select className="form-control form-control-sm" value={filterBelenBaidalID} onChange={(e) => setFilterBelenBaidalID(e.target.value)}>
                                         <option value="">Бүгд</option>
@@ -196,7 +215,7 @@ const YwsanBichigIndex = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="col-md-4">
+                                <div className="col-md-3">
                                     <label className="small">Бүтцийн нэгж</label>
                                     <select className="form-control form-control-sm" value={filterDivisionID} onChange={(e) => setFilterDivisionID(e.target.value)}>
                                         <option value="">Бүгд</option>
@@ -205,7 +224,7 @@ const YwsanBichigIndex = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="col-md-4">
+                                <div className="col-md-3">
                                     <label className="small">Хугацаа</label>
                                     <select className="form-control form-control-sm" value={filterHuygatsaa} onChange={(e) => setFilterHuygatsaa(e.target.value)}>
                                         <option value="">Бүгд</option>
