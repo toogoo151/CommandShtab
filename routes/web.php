@@ -80,6 +80,39 @@ Route::middleware('auth')->get('/get/auth/name', function () {
     return response()->json(['name' => auth()->user()->email ?? null]);
 });
 
+//notification
+Route::middleware('auth')->get('/notifications', function (\Illuminate\Http\Request $request) {
+    return $request->user()->unreadNotifications;
+});
+
+Route::middleware('auth')->get('/notifications/unread-document-ids', function (\Illuminate\Http\Request $request) {
+    $ids = $request->user()->unreadNotifications
+        ->map(fn($n) => $n->data['document_id'] ?? null)
+        ->filter()
+        ->unique()
+        ->values()
+        ->toArray();
+    return response()->json($ids);
+});
+
+Route::middleware('auth')->post('/notifications/read', function (\Illuminate\Http\Request $request) {
+    $request->user()->unreadNotifications->markAsRead();
+    return response()->json(['message' => 'Marked as read']);
+});
+
+Route::middleware('auth')->post('/notifications/read-by-document', function (\Illuminate\Http\Request $request) {
+    $documentId = $request->input('document_id');
+    if ($documentId === null || $documentId === '') {
+        return response()->json(['message' => 'document_id required'], 422);
+    }
+    $request->user()->unreadNotifications
+        ->filter(fn($n) => (int) ($n->data['document_id'] ?? 0) === (int) $documentId)
+        ->each
+        ->markAsRead();
+    return response()->json(['message' => 'Marked as read']);
+});
+//notification end
+
 Route::middleware('auth')->get('/get/auth/current', function () {
     $u = Auth::user();
     if (!$u) return response()->json(null);

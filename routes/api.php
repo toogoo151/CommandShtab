@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,3 +25,12 @@ Route::middleware('web')->group(function () {
 });
 Route::post('/information/viewed', 'InformationController@logViewedInformation');
 Route::post('/information/changed', 'InformationController@logChangedInformation');
+
+Route::middleware('auth:api')->get('/notifications', function (Request $request) {
+    return $request->user()->unreadNotifications;
+});
+
+Route::middleware('auth:api')->post('/notifications/read', function (Request $request) {
+    $request->user()->unreadNotifications->markAsRead();
+    return response()->json(['message' => 'Marked as read']);
+});

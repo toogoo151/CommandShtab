@@ -9,122 +9,150 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
+use App\Notifications\DocumentSentNotification;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+
 class BichigBarimtController extends Controller
 {
+
+    /**
+     * Ganbat Notification
+     */
+    private function notifyDestinationDivisionIfDivision($document, $destinationTypeID, $senderUserID)
+    {
+        $isDivision = DB::table('main_division')->where('id', $destinationTypeID)->exists();
+        if (!$isDivision) {
+            return;
+        }
+        $usersInDivision = User::where('divisionID', $destinationTypeID)
+            ->where('id', '!=', $senderUserID)
+            ->get();
+        foreach ($usersInDivision as $user) {
+            $user->notify(new DocumentSentNotification($document));
+        }
+    }
+    // Ganbat Notification end
+
     public function NewBichigBarimt(Request $req)
     {
-        try {
-            $isYwsan = $req->input('source') === 'ywsan';
+        // try {
+        $isYwsan = $req->input('source') === 'ywsan';
 
-            $rules = [
-                'hariutaiEseh' => 'required|in:1,2',
-                'typeID' => 'required',
-                'secretID' => 'required',
-                'sourceTypeID' => 'required',
-                'dugaar' => 'required',
-                'aguulga' => 'required',
-                'ognoo' => 'required',
-                'pdf' => 'nullable',
-                'pdf.*' => 'file|mimes:pdf,doc,docx|max:51200',
-            ];
-            if ($isYwsan) {
-                $rules['destinationTypeID'] = 'required|array|min:1';
-                $rules['destinationTypeID.*'] = 'required';
-            } else {
-                $rules['catID'] = 'required';
-                $rules['destinationTypeID'] = 'required';
+        $rules = [
+            'hariutaiEseh' => 'required|in:1,2',
+            'typeID' => 'required',
+            'secretID' => 'required',
+            'sourceTypeID' => 'required',
+            'dugaar' => 'required',
+            'aguulga' => 'required',
+            'ognoo' => 'required',
+            'pdf' => 'nullable',
+            'pdf.*' => 'file|mimes:pdf,doc,docx|max:51200',
+        ];
+        if ($isYwsan) {
+            $rules['destinationTypeID'] = 'required|array|min:1';
+            $rules['destinationTypeID.*'] = 'required';
+        } else {
+            $rules['catID'] = 'required';
+            $rules['destinationTypeID'] = 'required';
+        }
+
+        $req->validate($rules, [
+            'hariutaiEseh.required' => 'Хариутай эсэх сонгоно уу.',
+            'hariutaiEseh.in' => 'Хариугүй (1) эсвэл Хариутай (2) сонгоно уу.',
+            'catID.required' => 'Баримт бичгийн ангилал сонгоно уу.',
+            'typeID.required' => 'Баримт бичгийн төрөл сонгоно уу.',
+            'secretID.required' => 'Нууцлал сонгоно уу.',
+            'sourceTypeID.required' => 'Хаанаас ирсэн сонгоно уу.',
+            'destinationTypeID.required' => 'Хаашаа явсан дор хаяж 1 нэгж сонгоно уу.',
+            'destinationTypeID.*.required' => 'Хаашаа явсан сонгоно уу.',
+            'dugaar.required' => 'Дугаар оруулна уу.',
+            'aguulga.required' => 'Агуулга оруулна уу.',
+            'ognoo.required' => 'Огноо оруулна уу.',
+        ]);
+
+        $destinationIds = $isYwsan
+            ? (array) $req->input('destinationTypeID', [])
+            : [(string) $req->destinationTypeID];
+        if ($isYwsan && count($destinationIds) < 1) {
+            return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.'], 422);
+        }
+
+        if ($req->hariutaiEseh == '2' && ($req->hariuOgnoo === null || $req->hariuOgnoo === '')) {
+            return response(['status' => 'error', 'msg' => 'Хариутай сонгосон тохиолдолд Хариу өгөх огноо (минут) оруулна уу.'], 422);
+        }
+
+        $catID = $req->catID;
+        if ($isYwsan) {
+            $ywsanCat = BichigCat::where('catName', 'Явсан')->first();
+            if (!$ywsanCat) {
+                return response(['status' => 'error', 'msg' => 'Явсан ангилал тохиргоонд олдсонгүй. csh_bichig_cat хүснэгтэд "Явсан" нэртэй ангилал нэмнэ үү.'], 422);
             }
+            $catID = $ywsanCat->id;
+        }
 
-            $req->validate($rules, [
-                'hariutaiEseh.required' => 'Хариутай эсэх сонгоно уу.',
-                'hariutaiEseh.in' => 'Хариугүй (1) эсвэл Хариутай (2) сонгоно уу.',
-                'catID.required' => 'Баримт бичгийн ангилал сонгоно уу.',
-                'typeID.required' => 'Баримт бичгийн төрөл сонгоно уу.',
-                'secretID.required' => 'Нууцлал сонгоно уу.',
-                'sourceTypeID.required' => 'Хаанаас ирсэн сонгоно уу.',
-                'destinationTypeID.required' => 'Хаашаа явсан дор хаяж 1 нэгж сонгоно уу.',
-                'destinationTypeID.*.required' => 'Хаашаа явсан сонгоно уу.',
-                'dugaar.required' => 'Дугаар оруулна уу.',
-                'aguulga.required' => 'Агуулга оруулна уу.',
-                'ognoo.required' => 'Огноо оруулна уу.',
-            ]);
+        $userID = $req->userID ?? Auth::id();
+        $pdfPaths = [];
+        $totalSize = 0;
 
-            $destinationIds = $isYwsan
-                ? (array) $req->input('destinationTypeID', [])
-                : [(string) $req->destinationTypeID];
-            if ($isYwsan && count($destinationIds) < 1) {
-                return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.'], 422);
+        $pdfFiles = $req->file('pdf');
+        if ($pdfFiles) {
+            if (!is_array($pdfFiles)) {
+                $pdfFiles = [$pdfFiles];
             }
-
-            if ($req->hariutaiEseh == '2' && ($req->hariuOgnoo === null || $req->hariuOgnoo === '')) {
-                return response(['status' => 'error', 'msg' => 'Хариутай сонгосон тохиолдолд Хариу өгөх огноо (минут) оруулна уу.'], 422);
-            }
-
-            $catID = $req->catID;
-            if ($isYwsan) {
-                $ywsanCat = BichigCat::where('catName', 'Явсан')->first();
-                if (!$ywsanCat) {
-                    return response(['status' => 'error', 'msg' => 'Явсан ангилал тохиргоонд олдсонгүй. csh_bichig_cat хүснэгтэд "Явсан" нэртэй ангилал нэмнэ үү.'], 422);
-                }
-                $catID = $ywsanCat->id;
-            }
-
-            $userID = $req->userID ?? Auth::id();
-            $pdfPaths = [];
-            $totalSize = 0;
-
-            $pdfFiles = $req->file('pdf');
-            if ($pdfFiles) {
-                if (!is_array($pdfFiles)) {
-                    $pdfFiles = [$pdfFiles];
-                }
-                $baseDir = 'ywsan_bichig/' . $userID;
-                foreach ($pdfFiles as $file) {
-                    if ($file && $file->isValid()) {
-                        $originalName = $file->getClientOriginalName();
-                        $path = $file->storeAs($baseDir, $originalName, 'public');
-                        if ($path) {
-                            $pdfPaths[] = $path;
-                            $totalSize += $file->getSize();
-                        }
+            $baseDir = 'ywsan_bichig/' . $userID;
+            foreach ($pdfFiles as $file) {
+                if ($file && $file->isValid()) {
+                    $originalName = $file->getClientOriginalName();
+                    $path = $file->storeAs($baseDir, $originalName, 'public');
+                    if ($path) {
+                        $pdfPaths[] = $path;
+                        $totalSize += $file->getSize();
                     }
                 }
             }
-
-            $pdfStr = count($pdfPaths) > 0 ? implode(';', $pdfPaths) : null;
-            $fileSizeKb = $totalSize ? (int) round($totalSize / 1024) : null;
-
-            foreach ($destinationIds as $destId) {
-                $insert = new BichigBarimt();
-                $insert->userID = $userID;
-                $insert->hariutaiEseh = $req->hariutaiEseh;
-                $insert->catID = $catID;
-                $insert->typeID = $req->typeID;
-                $insert->secretID = $req->secretID;
-                $insert->level = $req->level ?? null;
-                $insert->belenBaidalID = $req->belenBaidalID ?? null;
-                $insert->sourceTypeID = $req->sourceTypeID;
-                $insert->destinationTypeID = $destId;
-                $insert->dugaar = $req->dugaar;
-                $insert->aguulga = $req->aguulga;
-                $insert->pdf = $pdfStr;
-                $insert->fileSize = $fileSizeKb;
-                $insert->ognoo = $req->ognoo;
-                $insert->hariuOgnoo = $req->hariuOgnoo ?? null;
-                $insert->description = $req->description ?? null;
-                $insert->save();
-            }
-
-            return response([
-                'status' => 'success',
-                'msg' => 'Амжилттай хадгаллаа.',
-            ], 200);
-        } catch (\Throwable $th) {
-            return response([
-                'status' => 'error',
-                'msg' => 'Алдаа гарлаа.',
-            ], 500);
         }
+
+        $pdfStr = count($pdfPaths) > 0 ? implode(';', $pdfPaths) : null;
+        $fileSizeKb = $totalSize ? (int) round($totalSize / 1024) : null;
+
+        foreach ($destinationIds as $destId) {
+            $insert = new BichigBarimt();
+            $insert->userID = $userID;
+            $insert->hariutaiEseh = $req->hariutaiEseh;
+            $insert->catID = $catID;
+            $insert->typeID = $req->typeID;
+            $insert->secretID = $req->secretID;
+            $insert->level = $req->level ?? null;
+            $insert->belenBaidalID = $req->belenBaidalID ?? null;
+            $insert->sourceTypeID = $req->sourceTypeID;
+            $insert->destinationTypeID = $destId;
+            $insert->dugaar = $req->dugaar;
+            $insert->aguulga = $req->aguulga;
+            $insert->pdf = $pdfStr;
+            $insert->fileSize = $fileSizeKb;
+            $insert->ognoo = $req->ognoo;
+            $insert->hariuOgnoo = $req->hariuOgnoo ?? null;
+            $insert->description = $req->description ?? null;
+            $insert->save();
+
+            // Ganbat Notification
+
+            $this->notifyDestinationDivisionIfDivision($insert, $destId, $userID);
+            // Ganbat Notification end
+        }
+
+        return response([
+            'status' => 'success',
+            'msg' => 'Амжилттай хадгаллаа.',
+        ], 200);
+        // } catch (\Throwable $th) {
+        //     return response([
+        //         'status' => 'error',
+        //         'msg' => 'Алдаа гарлаа.',
+        //     ], 500);
+        // }
     }
 
     public function DeleteBichigBarimt(Request $req)
@@ -255,6 +283,11 @@ class BichigBarimtController extends Controller
                     $insert->hariuOgnoo = $req->hariuOgnoo ?? null;
                     $insert->description = $req->description ?? null;
                     $insert->save();
+
+                    // Ganbat Notification
+
+                    $this->notifyDestinationDivisionIfDivision($insert, $destId, $userID);
+                    // Ganbat Notification end
                 }
 
                 return response([
@@ -310,6 +343,11 @@ class BichigBarimtController extends Controller
             $edit->hariuOgnoo = $req->hariuOgnoo ?? null;
             $edit->description = $req->description ?? null;
             $edit->save();
+
+            // Ganbat Notification
+            $this->notifyDestinationDivisionIfDivision($edit, $edit->destinationTypeID, $userID);
+            // Ganbat Notification
+
             return response([
                 'status' => 'success',
                 'msg' => 'Амжилттай заслаа.',

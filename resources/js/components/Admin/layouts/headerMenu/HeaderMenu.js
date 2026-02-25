@@ -15,6 +15,10 @@ export default function HeaderMenu(props) {
     const [getRows, setRows] = useState([]);
     const [loadData, setData] = useState([]);
     const [getName, setFirstName] = useState("");
+    // Ganbat Notification
+    const [notificationOpen, setNotificationOpen] = useState(false);
+    const [notificationLoading, setNotificationLoading] = useState(false);
+    // Ganbat Notification end
     const openChangePassword = () => {
         Swal.fire({
             title: "🔐 Нууц үг солих",
@@ -172,6 +176,73 @@ export default function HeaderMenu(props) {
         return () => clearInterval(interval); // cleanup on unmount
     }, []);
 
+    // Ganbat Notification
+    const fetchNotifications = async () => {
+        try {
+            setNotificationLoading(true);
+            const response = await axios.get("/notifications");
+            setData(Array.isArray(response.data) ? response.data : []);
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+            setData([]);
+        } finally {
+            setNotificationLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchNotifications();
+    }, []);
+
+    const handleNotificationToggle = () => {
+        if (!notificationOpen) {
+            fetchNotifications();
+        }
+        setNotificationOpen((prev) => !prev);
+    };
+
+    const handleMarkAsRead = async () => {
+        try {
+            await axios.post("/notifications/read");
+            setData([]);
+            setNotificationOpen(false);
+            window.location.href = "/irsen/bichig";
+        } catch (error) {
+            console.error("Error marking notifications as read:", error);
+        }
+    };
+
+    const closeNotificationDropdown = (e) => {
+        if (!e.target.closest(".notification-dropdown-wrap")) {
+            setNotificationOpen(false);
+        }
+    };
+
+    const handleNotificationItemClick = async (notification) => {
+        const documentId = notification?.data?.document_id;
+        if (documentId != null) {
+            try {
+                await axios.post("/notifications/read-by-document", {
+                    document_id: documentId,
+                });
+            } catch (err) {
+                console.error("Error marking notification as read:", err);
+            }
+        }
+        setData((prev) => prev.filter((n) => n.id !== notification?.id));
+        setNotificationOpen(false);
+        window.location.href = "/irsen/bichig";
+    };
+
+    useEffect(() => {
+        if (!notificationOpen) return;
+        const handler = (e) => closeNotificationDropdown(e);
+        document.addEventListener("click", handler);
+        return () => document.removeEventListener("click", handler);
+    }, [notificationOpen]);
+
+    // Ganbat Notification end
+
     const logout = () => {
         const csrfToken = document
             .querySelector('meta[name="csrf-token"]')
@@ -215,6 +286,120 @@ export default function HeaderMenu(props) {
 
             {/* RIGHT */}
             <ul className="navbar-nav ml-auto align-items-center">
+                {/* Ganbat Notification */}
+                {/* Notifications */}
+                <li className="nav-item notification-dropdown-wrap">
+                    <button
+                        type="button"
+                        className="nav-item notification notification-btn"
+                        onClick={handleNotificationToggle}
+                        aria-expanded={notificationOpen}
+                        aria-label="Мэдэгдэл"
+                    >
+                        <i className="fa fa-bell"></i>
+                        {loadData.length > 0 && (
+                            <span className="notification-badge">
+                                {loadData.length}
+                            </span>
+                        )}
+                    </button>
+                    {notificationOpen && (
+                        <div className="notification-dropdown">
+                            <div className="notification-dropdown-header">
+                                <span className="notification-dropdown-title">
+                                    Мэдэгдэл
+                                </span>
+                                {loadData.length > 0 && (
+                                    <button
+                                        type="button"
+                                        className="notification-mark-read"
+                                        onClick={handleMarkAsRead}
+                                    >
+                                        Бүгдийг уншсан болгох
+                                    </button>
+                                )}
+                            </div>
+                            <div className="notification-dropdown-body">
+                                {notificationLoading ? (
+                                    <div className="notification-empty">
+                                        Уншиж байна...
+                                    </div>
+                                ) : loadData.length === 0 ? (
+                                    <div className="notification-empty">
+                                        Шинэ мэдэгдэл байхгүй
+                                    </div>
+                                ) : (
+                                    <ul className="notification-list">
+                                        {loadData.map((n) => {
+                                            const d = n.data || {};
+                                            const created = n.created_at
+                                                ? new Date(
+                                                      n.created_at
+                                                  ).toLocaleString("mn-MN", {
+                                                      dateStyle: "short",
+                                                      timeStyle: "short",
+                                                  })
+                                                : "";
+                                            return (
+                                                <li
+                                                    key={n.id}
+                                                    className="notification-item notification-item-clickable"
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={() =>
+                                                        handleNotificationItemClick(
+                                                            n
+                                                        )
+                                                    }
+                                                    onKeyDown={(e) => {
+                                                        if (
+                                                            e.key === "Enter" ||
+                                                            e.key === " "
+                                                        ) {
+                                                            e.preventDefault();
+                                                            handleNotificationItemClick(
+                                                                n
+                                                            );
+                                                        }
+                                                    }}
+                                                >
+                                                    <div className="notification-item-title">
+                                                        {String(
+                                                            d.hariutaiEseh
+                                                        ) === "2"
+                                                            ? "Хариутай"
+                                                            : "Хариугүй"}
+                                                    </div>
+                                                    <div className="notification-item-message">
+                                                        {d.aguulga != null &&
+                                                        d.aguulga !== ""
+                                                            ? d.aguulga.length >
+                                                              60
+                                                                ? d.aguulga
+                                                                      .slice(
+                                                                          0,
+                                                                          60
+                                                                      )
+                                                                      .trim() +
+                                                                  "…"
+                                                                : d.aguulga
+                                                            : "—"}
+                                                    </div>
+                                                    {created && (
+                                                        <div className="notification-item-time">
+                                                            {created}
+                                                        </div>
+                                                    )}
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </li>
+                {/* Ganbat Notification end */}
                 {/* clock */}
                 <li className="nav-item navbar-time">🕒 {getTime} (MN)</li>
 
