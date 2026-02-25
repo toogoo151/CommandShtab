@@ -105,6 +105,28 @@ class StatisticController extends Controller
         return $query->count();
     }
 
+    public function HariuIrsenCount(Request $req)
+    {
+        $query = DB::table("csh_bichig")
+            ->join(
+                "csh_bichig_hariu",
+                "csh_bichig_hariu.bichigID",
+                "=",
+                "csh_bichig.id"
+            )
+            ->join("users", "users.id", "=", "csh_bichig.userID");
+
+        if ($req->divisionID != 0) {
+            $query->where("users.divisionID", $req->divisionID);
+        }
+
+
+        $count = $query->distinct("csh_bichig.id")->count("csh_bichig.id");
+
+        return $count;
+    }
+
+
     public function HugatsaaHetersenCount(Request $req)
     {
 
@@ -253,54 +275,14 @@ NOW()
      * Get available years from harya_on column (distinct years from db_arhivbaingahad and db_arhivhnnuuts).
      * Returns min, max, and all available years.
      */
-    public function graphicAvailableYears(Request $request)
+    public function barimtbichigGraphic(Request $request)
     {
-        $years = [];
 
-        // Get distinct harya_on from db_arhivbaingahad
-        $baingaYears = DB::table('db_arhivbaingahad')
-            ->where('user_id', $this->userId())
-            ->whereNotNull('harya_on')
-            ->where('harya_on', '!=', '')
-            ->distinct()
-            ->pluck('harya_on')
-            ->toArray();
+        $baingaYears = DB::table('csh_bichig')
+    
 
-        // Get distinct harya_on from db_arhivhnnuuts
-        $nuutsYears = DB::table('db_arhivhnnuuts')
-            ->where('user_id', $this->userId())
-            ->whereNotNull('harya_on')
-            ->where('harya_on', '!=', '')
-            ->distinct()
-            ->pluck('harya_on')
-            ->toArray();
 
-        // Extract year from "year/2025" or "2025" format
-        $extractYear = function ($value) {
-            if (preg_match('/year\/(\d{4})/', $value, $matches)) {
-                return (int) $matches[1];
-            }
-            if (preg_match('/^(\d{4})$/', $value, $matches)) {
-                return (int) $matches[1];
-            }
-            return null;
-        };
-
-        foreach (array_merge($baingaYears, $nuutsYears) as $haryaOn) {
-            $year = $extractYear($haryaOn);
-            if ($year && $year >= 1900 && $year <= 2100) {
-                $years[] = $year;
-            }
-        }
-
-        $years = array_unique($years);
-        sort($years);
-
-        return response()->json([
-            'years' => $years,
-            'minYear' => !empty($years) ? min($years) : null,
-            'maxYear' => !empty($years) ? max($years) : null,
-        ]);
+      
     }
 
     /**

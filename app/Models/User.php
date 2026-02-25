@@ -95,16 +95,23 @@ class User extends Authenticatable
     public function getDivisionName()
     {
         try {
-            $user = DB::table("users")
-                ->join("main_division", "main_division.id", "=", "users.divisionID")
-                ->select("main_division.nickName")
-                ->get();
 
-            return response()->json($user); // JSON болгож буцаана
+            $user = Auth::user();
+
+            $division = DB::table("main_division")
+                ->where(
+                    "id",
+                    $user->divisionID
+                )
+                ->select("nickName")
+                ->first();
+
+            return response()->json($division);
         } catch (\Throwable $th) {
+
             return response()->json([
                 "status" => "error",
-                "msg" => "татаж чадсангүй."
+                "msg" => "алдаа"
             ], 500);
         }
     }

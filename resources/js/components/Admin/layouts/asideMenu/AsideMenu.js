@@ -100,24 +100,21 @@ export default function AsideMenu() {
                 },
             ],
         },
-
     ];
 
     useEffect(() => {
         axios
             .get("/get/divisionName")
             .then((res) => {
-                // Хэрэв серверээс массив ирж байвал эхний элементийг авна
-                if (res.data && res.data.length > 0) {
-                    setName(res.data[0].nickName);
+                if (res.data) {
+                    setName(res.data.nickName);
                 }
+
+                console.log(res.data);
             })
             .catch((err) => {
-                console.error("Division name load failed:", err);
+                console.error(err);
             });
-        // axios.get("/get/divisionName").then((res) => {
-        //     setName(res.data);
-        // });
 
         axios.get("/get/auth/tuvshin").then((res) => {
             setTuvshin(res.data);

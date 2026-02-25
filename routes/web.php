@@ -256,6 +256,7 @@ Route::post("/get/ClaccCount", [StatisticController::class, "ClassCount"]);
 Route::post("/get/HutheregCount", [StatisticController::class, "HutheregCount"]);
 
 
+
 Route::get('/get/DivisionName', function () {
     return DB::table('main_division')->get();
 });
@@ -267,6 +268,7 @@ Route::post("/get/HariuguiCount", [StatisticController::class, "HariuguiCount"])
 Route::post("/get/HugatsaaHetersenCount", [StatisticController::class, "HugatsaaHetersenCount"])->middleware('auth');
 Route::post("/get/Usercount", [StatisticController::class, "UserCount"]);
 Route::post("/get/uurtirsenbichiCount", [StatisticController::class, "UurtirsenbichiCount"]);
+Route::post("/get/HariuIrsenCount", [StatisticController::class, "HariuIrsenCount"]);
 
 //STATISTIC END
 

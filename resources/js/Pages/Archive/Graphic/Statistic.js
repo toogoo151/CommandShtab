@@ -12,6 +12,7 @@ const Statistic = () => {
     const [HariuguiCount, setHariuguiCount] = useState(0);
     const [HugatsaaHetersenCount, setHugatsaaHetersenCount] = useState(0);
     const [UserCount, setUserCount] = useState(0);
+    const [HariuIrsenCount, setHariuIrsenCount] = useState(0);
 
     const [selectedJname, setSelectedJname] = useState(0);
     const [getJname, setGetJname] = useState([]);
@@ -87,6 +88,14 @@ const Statistic = () => {
             })
             .then((res) => {
                 setuurtirsenbichiCount(res.data);
+            });
+        axios
+            .post("/get/HariuIrsenCount", {
+                divisionID,
+            })
+            .then((res) => {
+                console.log(res.data);
+                setHariuIrsenCount(res.data);
             });
     };
 
@@ -258,6 +267,13 @@ const Statistic = () => {
                     icon={MdFolder}
                     cardBg={cardBackgrounds[1]}
                     iconGradient={iconGradients[1]}
+                />
+                <StatCard
+                    title="Баримт бичигт хариу өгсөн"
+                    value={HariuIrsenCount}
+                    icon={MdFolder}
+                    cardBg={cardBackgrounds[2]}
+                    iconGradient={iconGradients[2]}
                 />
             </div>
             {/* Hover and gradient animation CSS */}
