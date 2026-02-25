@@ -281,15 +281,7 @@ Route::get("/get/bichig/group", function (\Illuminate\Http\Request $req) {
 //Баримт бичиг ангилал end
 
 // STATISTIC START
-Route::post("/get/summary", [StatisticController::class, "summary"]);
-Route::post("/get/graphic-year-counts", [StatisticController::class, "graphicYearCounts"]);
-Route::post("/get/graphic-year-range-counts", [StatisticController::class, "graphicYearRangeCounts"]);
-Route::post("/get/graphic-available-years", [StatisticController::class, "graphicAvailableYears"]);
-Route::post("/get/graphic-70year-counts", [StatisticController::class, "graphic70YearCounts"]);
-Route::post("/get/monthly-stat", [StatisticController::class, "monthlyStat"]);
-Route::post("/get/group-stat", [StatisticController::class, "groupStat"]);
-Route::post("/get/ClaccCount", [StatisticController::class, "ClassCount"]);
-Route::post("/get/HutheregCount", [StatisticController::class, "HutheregCount"]);
+
 
 
 
@@ -306,6 +298,27 @@ Route::post("/get/Usercount", [StatisticController::class, "UserCount"]);
 Route::post("/get/uurtirsenbichiCount", [StatisticController::class, "UurtirsenbichiCount"]);
 Route::post("/get/HariuIrsenCount", [StatisticController::class, "HariuIrsenCount"]);
 Route::post("/get/HugatsaaHetersen", [StatisticController::class, "HugatsaaHetersen"]);
+Route::post("/get/BichigTypeCount", [StatisticController::class, "BichigTypeCount"]);
+Route::post("/get/BelenzeregCount", [StatisticController::class, "BelenzeregCount"]);
+Route::post("/get/HetersenHugatsaa", [StatisticController::class, "HetersenHugatsaa"]);
+Route::post("/get/HariutaiIrsenCount", [StatisticController::class, "HariutaiIrsenCount"]);
+Route::post("/get/HariuguiIrsenCount", [StatisticController::class, "HariuguiIrsenCount"]);
+
+//jishee graphic
+Route::post("/get/JishigIrsenBichigBarimt", [StatisticController::class, "JishigIrsenBichigBarimt"])->middleware('auth');
+Route::post("/get/JishiguurtirsenbichiCount", [StatisticController::class, "JishigUurtirsenbichiCount"]);
+
+Route::post(
+    "/get/DivisionCompareGraphic",
+    [StatisticController::class, "DivisionCompareGraphic"]
+);
+Route::post(
+    "/get/DivisionHetersenGraphic",
+    [StatisticController::class, "DivisionHetersenGraphic"]
+);
+
+
+
 
 
 //STATISTIC END

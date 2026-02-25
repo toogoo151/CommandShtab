@@ -1,732 +1,449 @@
-import { ArcElement, Chart as ChartJS, Legend, Tooltip } from "chart.js";
-import ChartDataLabels from "chartjs-plugin-datalabels";
-import { useEffect, useMemo, useState } from "react";
-import { Doughnut, Pie } from "react-chartjs-2";
+import { useEffect, useState } from "react";
+import CountUp from "react-countup";
+import {
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+} from "recharts";
 import axios from "../../../AxiosUser";
-
-ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
-
-/* ================= CENTER TEXT (Donut) ================= */
-const centerTextPlugin = {
-    id: "centerText",
-    beforeDraw(chart) {
-        const { ctx } = chart;
-        const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-
-        const x = chart.getDatasetMeta(0).data[0].x;
-        const y = chart.getDatasetMeta(0).data[0].y;
-
-        ctx.save();
-        ctx.font = "bold 26px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(total, x, y);
-        ctx.restore();
-    },
-};
-
-ChartJS.register(centerTextPlugin);
-
-/* ================= COMPONENT ================= */
 const Graphic = () => {
-    // Available years from database
-    const [availableYears, setAvailableYears] = useState([]);
-    const [minYear, setMinYear] = useState(null);
-    const [maxYear, setMaxYear] = useState(null);
-    const [yearsLoading, setYearsLoading] = useState(true);
+    const [irsenbichiCount, setirsenbichigCount] = useState(0);
+    const [uurtirsenbichiCount, setuurtirsenbichiCount] = useState(0);
 
-    // Per-card filters (From/To) - auto-set from DB min/max
-    const [baingaFrom, setBaingaFrom] = useState(null);
-    const [baingaTo, setBaingaTo] = useState(null);
-    const [turFrom, setTurFrom] = useState(null);
-    const [turTo, setTurTo] = useState(null);
-    const [dalan70From, setDalan70From] = useState(null);
-    const [dalan70To, setDalan70To] = useState(null);
+    const [HariutaiCount, setHariutaiCount] = useState(0);
+    const [HariuguiCount, setHariuguiCount] = useState(0);
+    const [HugatsaaHetersenCount, setHugatsaaHetersenCount] = useState(0);
+    const [UserCount, setUserCount] = useState(0);
+    const [HariuIrsenCount, setHariuIrsenCount] = useState(0);
+    const [HugatsaaHetersen, setHugatsaaHetersen] = useState(0);
+    const [BichigTypeCount, setBichigType] = useState([]);
+    const [BelenzeregCount, setBelenzeregCount] = useState([]);
+    const [HetersenHugatsaaCount, setHetersenHugatsaa] = useState([]);
 
-    const [baingaCounts, setBaingaCounts] = useState({
-        baingaIlt: 0,
-        baingaNuuts: 0,
-    });
-    const [turCounts, setTurCounts] = useState({ turIlt: 0, turNuuts: 0 });
-    const [dalan70Counts, setDalan70Counts] = useState({
-        dalanJilHun: 0,
-        dalanJilSanhuu: 0,
-    });
+    const [selectedJname, setSelectedJname] = useState(0);
+    const [getJname, setGetJname] = useState([]);
 
-    const [baingaLoading, setBaingaLoading] = useState(true);
-    const [turLoading, setTurLoading] = useState(true);
-    const [dalan70Loading, setDalan70Loading] = useState(true);
-    const [baingaError, setBaingaError] = useState(null);
-    const [turError, setTurError] = useState(null);
-    const [dalan70Error, setDalan70Error] = useState(null);
+    const RADIAN = Math.PI / 180;
 
-    // Fetch available years from database on mount
+    const renderLabel = ({ cx, cy, midAngle, outerRadius, percent }) => {
+        const radius = outerRadius + 15; // гадна гаргах зай
+        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+        return (
+            <text
+                x={x}
+                y={y}
+                fill="#333"
+                textAnchor={x > cx ? "start" : "end"}
+                dominantBaseline="central"
+                style={{ fontSize: 13, fontWeight: 600 }}
+            >
+                {(percent * 100).toFixed(0)}%
+            </text>
+        );
+    };
+
+    const COLORS = [
+        "url(#color1)",
+        "url(#color2)",
+        "url(#color3)",
+        "url(#color4)",
+    ];
+
+    const PieGraph = ({ title, data }) => {
+        const total = data.reduce((sum, item) => sum + item.value, 0);
+
+        const renderLabel = ({ percent }) => `${(percent * 100).toFixed(0)}%`;
+
+        return (
+            <div className="col-xl-4 col-md-6 col-sm-12">
+                <div
+                    style={{
+                        background: "linear-gradient(135deg,#ffffff,#f6f9ff)",
+                        borderRadius: 18,
+                        padding: 20,
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+                        transition: ".3s",
+                    }}
+                    className="hover-card"
+                >
+                    <h6
+                        style={{
+                            textAlign: "center",
+                            fontWeight: 700,
+                            marginBottom: 10,
+                        }}
+                    >
+                        {title}
+                    </h6>
+
+                    <ResponsiveContainer width="100%" height={320}>
+                        <PieChart>
+                            {/* Gradient өнгө */}
+                            <defs>
+                                <linearGradient id="color1">
+                                    <stop offset="0%" stopColor="#4776E6" />
+                                    <stop offset="100%" stopColor="#8E54E9" />
+                                </linearGradient>
+
+                                <linearGradient id="color2">
+                                    <stop offset="0%" stopColor="#00c9ff" />
+                                    <stop offset="100%" stopColor="#92fe9d" />
+                                </linearGradient>
+
+                                <linearGradient id="color3">
+                                    <stop offset="0%" stopColor="#ff416c" />
+                                    <stop offset="100%" stopColor="#ff4b2b" />
+                                </linearGradient>
+
+                                <linearGradient id="color4">
+                                    <stop offset="0%" stopColor="#f7971e" />
+                                    <stop offset="100%" stopColor="#ffd200" />
+                                </linearGradient>
+                            </defs>
+
+                            <Pie
+                                data={data}
+                                dataKey="value"
+                                nameKey="name"
+                                innerRadius={65}
+                                outerRadius={95}
+                                paddingAngle={4}
+                                label={renderLabel}
+                                animationDuration={1200}
+                            >
+                                {data.map((entry, index) => (
+                                    <Cell
+                                        key={index}
+                                        fill={COLORS[index % COLORS.length]}
+                                    />
+                                ))}
+                            </Pie>
+
+                            {/* Center text */}
+                            <text
+                                x="50%"
+                                y="50%"
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                style={{
+                                    fontSize: 20,
+                                    fontWeight: 700,
+                                }}
+                            >
+                                {total}
+                            </text>
+
+                            <Tooltip />
+
+                            <Legend iconType="circle" verticalAlign="bottom" />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+        );
+    };
     useEffect(() => {
-        setYearsLoading(true);
+        refreshStatic(selectedJname);
+    }, [selectedJname]);
+
+    useEffect(() => {
+        // Fetch distinct jName values
         axios
-            .post("/get/graphic-available-years")
+            .get("/get/DivisionName")
             .then((res) => {
-                const years = res.data?.years || [];
-                const min = res.data?.minYear;
-                const max = res.data?.maxYear;
-                setAvailableYears(years);
-                setMinYear(min);
-                setMaxYear(max);
-                // Auto-set FROM/TO to min/max
-                if (min !== null && max !== null) {
-                    setBaingaFrom(min);
-                    setBaingaTo(max);
-                    setTurFrom(min);
-                    setTurTo(max);
-                    setDalan70From(min);
-                    setDalan70To(max);
-                }
+                setGetJname(res.data);
             })
-            .catch((e) => {
-                console.error("Failed to fetch available years:", e);
-                // Fallback to current year if DB fails
-                const currentYear = new Date().getFullYear();
-                const fallbackYears = [currentYear];
-                setAvailableYears(fallbackYears);
-                setMinYear(currentYear);
-                setMaxYear(currentYear);
-                setBaingaFrom(currentYear);
-                setBaingaTo(currentYear);
-                setTurFrom(currentYear);
-                setTurTo(currentYear);
-                setDalan70From(currentYear);
-                setDalan70To(currentYear);
-            })
-            .finally(() => setYearsLoading(false));
+            .catch((err) => {
+                console.log(err);
+            });
     }, []);
 
-    const fetchDalan70 = () => {
-        setDalan70Loading(true);
-        setDalan70Error(null);
-        return axios
-            .post("/get/graphic-70year-counts", {
-                startYear: dalan70From,
-                endYear: dalan70To,
-            })
-            .then((res) => {
-                setDalan70Counts({
-                    dalanJilHun: res.data?.dalanJilHun ?? 0,
-                    dalanJilSanhuu: res.data?.dalanJilSanhuu ?? 0,
-                });
-            })
-            .catch((e) => {
-                console.error(e);
-                setDalan70Error("Өгөгдөл ачааллахад алдаа гарлаа.");
-                setDalan70Counts({ dalanJilHun: 0, dalanJilSanhuu: 0 });
-            })
-            .finally(() => setDalan70Loading(false));
-    };
-
-    const fetchBainga = () => {
-        setBaingaLoading(true);
-        setBaingaError(null);
-        return axios
-            .post("/get/graphic-year-range-counts", {
-                startYear: baingaFrom,
-                endYear: baingaTo,
-            })
-            .then((res) => {
-                setBaingaCounts({
-                    baingaIlt: res.data?.baingaIlt ?? 0,
-                    baingaNuuts: res.data?.baingaNuuts ?? 0,
-                });
-            })
-            .catch((e) => {
-                console.error(e);
-                setBaingaError("Өгөгдөл ачааллахад алдаа гарлаа.");
-                setBaingaCounts({ baingaIlt: 0, baingaNuuts: 0 });
-            })
-            .finally(() => setBaingaLoading(false));
-    };
-
-    const fetchTur = () => {
-        setTurLoading(true);
-        setTurError(null);
-        return axios
-            .post("/get/graphic-year-range-counts", {
-                startYear: turFrom,
-                endYear: turTo,
-            })
-            .then((res) => {
-                setTurCounts({
-                    turIlt: res.data?.turIlt ?? 0,
-                    turNuuts: res.data?.turNuuts ?? 0,
-                });
-            })
-            .catch((e) => {
-                console.error(e);
-                setTurError("Өгөгдөл ачааллахад алдаа гарлаа.");
-                setTurCounts({ turIlt: 0, turNuuts: 0 });
-            })
-            .finally(() => setTurLoading(false));
-    };
-
     useEffect(() => {
-        if (baingaFrom !== null && baingaTo !== null) {
-            fetchBainga();
+        if (selectedJname !== 0) {
+            const selectedJ = getJname.find(
+                (el) => Number(el.id) === selectedJname
+            );
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [baingaFrom, baingaTo]);
+    }, [selectedJname, , getJname]);
 
-    useEffect(() => {
-        if (turFrom !== null && turTo !== null) {
-            fetchTur();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [turFrom, turTo]);
+    const bichigData = [
+        { name: "Ирсэн", value: uurtirsenbichiCount },
+        { name: "Явсан", value: irsenbichiCount },
+    ];
 
-    useEffect(() => {
-        if (dalan70From !== null && dalan70To !== null) {
-            fetchDalan70();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dalan70From, dalan70To]);
+    const hariuData = [
+        { name: "Хариутай", value: HariutaiCount },
+        { name: "Хариугүй", value: HariuguiCount },
+    ];
 
-    /* ================= PIE: Bainga (Bainga Ilt + Bainga Nuuts) ================= */
-    const baingaChartData = useMemo(
-        () => ({
-            labels: [
-                "Байна хадгалах хадгаламжийн нэгж - Илт",
-                "Байнга хадгалах хадгаламжийн нэгж - Нууц",
-            ],
-            datasets: [
-                {
-                    data: [baingaCounts.baingaIlt, baingaCounts.baingaNuuts],
-                    backgroundColor: ["#4facfe", "#43e97b"],
-                    borderWidth: 2,
-                },
-            ],
-        }),
-        [baingaCounts.baingaIlt, baingaCounts.baingaNuuts]
-    );
-
-    /* ================= DONUT: Tur (Tur Ilt + Tur Nuuts) ================= */
-    const turChartData = useMemo(
-        () => ({
-            labels: [
-                "Түр хадгалагдах хадгаламжийн нэгж - Илт",
-                "Түр хадгалагдах хадгаламжийн нэгж - Нууц",
-            ],
-            datasets: [
-                {
-                    data: [turCounts.turIlt, turCounts.turNuuts],
-                    backgroundColor: ["#fa709a", "#fee140"],
-                    borderWidth: 2,
-                },
-            ],
-        }),
-        [turCounts.turIlt, turCounts.turNuuts]
-    );
-
-    /* ================= 70 жил: Хүний нөөц (DalanJilHun) ================= */
-    const dalan70HunChartData = useMemo(
-        () => ({
-            labels: ["70 жил хадгалах - Хүний нөөц"],
-            datasets: [
-                {
-                    data: [dalan70Counts.dalanJilHun],
-                    backgroundColor: ["#6366f1"],
-                    borderWidth: 2,
-                },
-            ],
-        }),
-        [dalan70Counts.dalanJilHun]
-    );
-
-    /* ================= 70 жил: Санхүү (DalanJilSanhuu) ================= */
-    const dalan70SanhuuChartData = useMemo(
-        () => ({
-            labels: ["70 жил хадгалах - Санхүү"],
-            datasets: [
-                {
-                    data: [dalan70Counts.dalanJilSanhuu],
-                    backgroundColor: ["#14b8a6"],
-                    borderWidth: 2,
-                },
-            ],
-        }),
-        [dalan70Counts.dalanJilSanhuu]
-    );
-
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { position: "bottom" },
-            datalabels: {
-                color: "#fff",
-                font: { weight: "bold" },
-            },
+    const hugatsaaData = [
+        {
+            name: "Хугацаа хэтэрсэн",
+            value: HugatsaaHetersenCount,
         },
+        {
+            name: "Хариу ирсэн",
+            value: HariuIrsenCount,
+        },
+    ];
+    const refreshStatic = (divisionID = 0) => {
+        axios
+            .post("/get/IrsenBichigBarimt", {
+                divisionID,
+            })
+            .then((res) => setirsenbichigCount(res.data));
+
+        axios.post("/get/HetersenHugatsaa").then((res) => {
+            const data = res.data.map((el) => ({
+                name: el.nickName,
+                value: el.total,
+            }));
+
+            setHetersenHugatsaa(data);
+        });
+
+        axios
+            .post("/get/Hariutai", {
+                divisionID,
+            })
+            .then((res) => setHariutaiCount(res.data));
+
+        axios
+            .post("/get/HariuguiCount", {
+                divisionID,
+            })
+            .then((res) => setHariuguiCount(res.data));
+
+        axios
+            .post("/get/HugatsaaHetersenCount", {
+                divisionID,
+            })
+            .then((res) => {
+                setHugatsaaHetersenCount(res.data);
+            });
+
+        axios
+            .post("/get/BichigTypeCount", {
+                divisionID,
+            })
+            .then((res) => {
+                const pieData = res.data.map((el) => ({
+                    name: el.typeName,
+                    value: el.total,
+                }));
+
+                setBichigType(pieData);
+            });
+
+        axios
+            .post("/get/BelenzeregCount", {
+                divisionID,
+            })
+            .then((res) => {
+                const pieData = res.data.map((el) => ({
+                    name: el.belenBaidalName,
+                    value: el.total,
+                }));
+
+                setBelenzeregCount(pieData);
+            });
+
+        // axios
+        //     .post("/get/BichigTypeCount", {
+        //         divisionID,
+        //     })
+        //     .then((res) => {
+        //         setBichigType(res.data);
+        //     });
+
+        axios
+            .post("/get/Usercount", {
+                divisionID,
+            })
+            .then((res) => {
+                setUserCount(res.data);
+            });
+
+        axios
+            .post("/get/uurtirsenbichiCount", {
+                divisionID,
+            })
+            .then((res) => {
+                setuurtirsenbichiCount(res.data);
+            });
+        axios
+            .post("/get/HariuIrsenCount", {
+                divisionID,
+            })
+            .then((res) => {
+                console.log(res.data);
+                setHariuIrsenCount(res.data);
+            });
+        axios
+            .post("/get/HugatsaaHetersen", {
+                divisionID,
+            })
+            .then((res) => {
+                console.log(res.data);
+                setHugatsaaHetersen(res.data);
+            });
     };
+
+    const StatCard = ({ title, value, icon: Icon, cardBg, iconGradient }) => (
+        <div className="col-xl-3 col-lg-3 col-md-6 col-sm-12">
+            <div
+                className="hover-card"
+                style={{
+                    backdropFilter: "blur(5px)",
+                    background: cardBg,
+                    borderRadius: "16px",
+                    padding: "20px",
+                    color: "#000",
+                    boxShadow: "0 6px 15px rgba(0,0,0,0.1)",
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    height: "100px",
+                    overflow: "hidden",
+                }}
+            >
+                <div
+                    style={{
+                        flex: 1,
+                        whiteSpace: "wrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                >
+                    <h6
+                        style={{
+                            fontSize: "14px",
+                            fontWeight: 500,
+                            color: "#000",
+                        }}
+                    >
+                        {title}
+                    </h6>
+                    <h2
+                        style={{
+                            fontWeight: "bold",
+                            marginTop: "5px",
+                            fontSize: "22px",
+                            color: "#000",
+                        }}
+                    >
+                        <CountUp end={value} duration={1.5} separator="," />
+                    </h2>
+                </div>
+
+                <div
+                    style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: "50%",
+                        background: iconGradient,
+                        backgroundSize: "400% 400%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 28,
+                        animation: "gradientAnimation 10s ease infinite",
+                        marginLeft: "10px",
+                    }}
+                >
+                    <Icon />
+                </div>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="GraphicWrapper">
-            <div className="header">
-                <h2>📊 Нэгдсэн график</h2>
+        <div className="container-fluid">
+            <div className="row mb-3">
+                <div className="col-12 text-center">
+                    <h2 style={{ fontWeight: "700", color: "#000" }}>
+                        📊 Нийт тоон үзүүлэлт
+                    </h2>
+                    <p style={{ color: "#555", fontSize: "14px" }}>
+                        Системийн ерөнхий мэдээлэл
+                    </p>
+                </div>
+            </div>
+            <div className="col-md-8 mb-3">
+                <div className="input-group">
+                    <span className="input-group-text">Бүтцийн нэгж:</span>
+
+                    <select
+                        className="form-control"
+                        value={selectedJname}
+                        onChange={(e) => {
+                            const value = Number(e.target.value);
+                            setSelectedJname(value);
+                        }}
+                    >
+                        <option value={0}>Сонгоно уу</option>
+                        {getJname.map((el) => (
+                            <option key={el.id} value={el.id}>
+                                {el.nickName}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
-            {yearsLoading && (
-                <div className="loading-box">
-                    Нэгдсэн мэдээлэл ачааллаж байна...
-                </div>
-            )}
+            <div className="row g-3" style={{ marginBottom: "30px" }}>
+                {" "}
+                <PieGraph
+                    title="Ирсэн / Явсан баримт бичиг"
+                    data={bichigData}
+                />
+                <PieGraph
+                    title="Хариутай / Хариугүй баримт бичиг"
+                    data={hariuData}
+                />
+                <PieGraph
+                    title="Хугацаа хэтэрсэн/ Хариу өгсөн баримт бичиг"
+                    data={hugatsaaData}
+                />
+            </div>
 
-            {!yearsLoading && availableYears.length === 0 && (
-                <div className="error-msg">
-                    Өгөгдөл олдсонгүй. Хадгаламжийн мэдээлэл байхгүй байна.
-                </div>
-            )}
+            <div className="row g-3" style={{ marginBottom: "30px" }}>
+                <PieGraph title="Баримт бичгийн төрөл" data={BichigTypeCount} />
 
-            {!yearsLoading && availableYears.length > 0 && (
-                <div className="row">
-                    <div className="card">
-                        <div className="card-head">
-                            <h4>📁 Баримт бичиг</h4>
-                            <div className="filters">
-                                <select
-                                    value={baingaFrom ?? ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setBaingaFrom(v);
-                                        if (v > baingaTo) setBaingaTo(v);
-                                    }}
-                                    disabled={
-                                        baingaLoading ||
-                                        yearsLoading ||
-                                        !availableYears.length
-                                    }
-                                >
-                                    {availableYears.length === 0 ? (
-                                        <option value="">...</option>
-                                    ) : (
-                                        availableYears.map((y) => (
-                                            <option
-                                                key={`b-from-${y}`}
-                                                value={y}
-                                            >
-                                                {y}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                                <span className="to">→</span>
-                                <select
-                                    value={baingaTo ?? ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setBaingaTo(v);
-                                        if (v < baingaFrom) setBaingaFrom(v);
-                                    }}
-                                    disabled={
-                                        baingaLoading ||
-                                        yearsLoading ||
-                                        !availableYears.length
-                                    }
-                                >
-                                    {availableYears.length === 0 ? (
-                                        <option value="">...</option>
-                                    ) : (
-                                        availableYears.map((y) => (
-                                            <option key={`b-to-${y}`} value={y}>
-                                                {y}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                            </div>
-                        </div>
+                <PieGraph
+                    title="Бэлэн байдлын зэргээр бүртгэгдсэн баримт бичиг"
+                    data={BelenzeregCount}
+                />
 
-                        {baingaError && (
-                            <div className="error-msg">
-                                {baingaError}
-                                <button type="button" onClick={fetchBainga}>
-                                    Дахин оролдох
-                                </button>
-                            </div>
-                        )}
-
-                        {baingaLoading ? (
-                            <div className="loading-box">
-                                Өгөгдөл ачааллаж байна...
-                            </div>
-                        ) : (
-                            <div className="chart-box">
-                                <Pie data={baingaChartData} options={options} />
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="card">
-                        <div className="card-head">
-                            <h4>📁 Түр</h4>
-                            <div className="filters">
-                                <select
-                                    value={turFrom ?? ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setTurFrom(v);
-                                        if (v > turTo) setTurTo(v);
-                                    }}
-                                    disabled={
-                                        turLoading ||
-                                        yearsLoading ||
-                                        !availableYears.length
-                                    }
-                                >
-                                    {availableYears.length === 0 ? (
-                                        <option value="">...</option>
-                                    ) : (
-                                        availableYears.map((y) => (
-                                            <option
-                                                key={`t-from-${y}`}
-                                                value={y}
-                                            >
-                                                {y}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                                <span className="to">→</span>
-                                <select
-                                    value={turTo ?? ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setTurTo(v);
-                                        if (v < turFrom) setTurFrom(v);
-                                    }}
-                                    disabled={
-                                        turLoading ||
-                                        yearsLoading ||
-                                        !availableYears.length
-                                    }
-                                >
-                                    {availableYears.length === 0 ? (
-                                        <option value="">...</option>
-                                    ) : (
-                                        availableYears.map((y) => (
-                                            <option key={`t-to-${y}`} value={y}>
-                                                {y}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                            </div>
-                        </div>
-
-                        {turError && (
-                            <div className="error-msg">
-                                {turError}
-                                <button type="button" onClick={fetchTur}>
-                                    Дахин оролдох
-                                </button>
-                            </div>
-                        )}
-
-                        {turLoading ? (
-                            <div className="loading-box">
-                                Өгөгдөл ачааллаж байна...
-                            </div>
-                        ) : (
-                            <div className="chart-box">
-                                <Doughnut
-                                    data={turChartData}
-                                    options={{
-                                        ...options,
-                                        cutout: "70%",
-                                        plugins: {
-                                            ...options.plugins,
-                                            centerText: true,
-                                        },
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 70 жил хадгалах хүний нөөц (DalanJilHun) */}
-                    <div className="card">
-                        <div className="card-head">
-                            <h4>📋 70 жил хадгалах - Хүний нөөц</h4>
-                            <div className="filters">
-                                <select
-                                    value={dalan70From ?? ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setDalan70From(v);
-                                        if (v > dalan70To) setDalan70To(v);
-                                    }}
-                                    disabled={
-                                        dalan70Loading ||
-                                        yearsLoading ||
-                                        !availableYears.length
-                                    }
-                                >
-                                    {availableYears.length === 0 ? (
-                                        <option value="">...</option>
-                                    ) : (
-                                        availableYears.map((y) => (
-                                            <option
-                                                key={`d70-from-${y}`}
-                                                value={y}
-                                            >
-                                                {y}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                                <span className="to">→</span>
-                                <select
-                                    value={dalan70To ?? ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setDalan70To(v);
-                                        if (v < dalan70From) setDalan70From(v);
-                                    }}
-                                    disabled={
-                                        dalan70Loading ||
-                                        yearsLoading ||
-                                        !availableYears.length
-                                    }
-                                >
-                                    {availableYears.length === 0 ? (
-                                        <option value="">...</option>
-                                    ) : (
-                                        availableYears.map((y) => (
-                                            <option
-                                                key={`d70-to-${y}`}
-                                                value={y}
-                                            >
-                                                {y}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                            </div>
-                        </div>
-                        {dalan70Error && (
-                            <div className="error-msg">
-                                {dalan70Error}
-                                <button type="button" onClick={fetchDalan70}>
-                                    Дахин оролдох
-                                </button>
-                            </div>
-                        )}
-                        {dalan70Loading ? (
-                            <div className="loading-box">
-                                Өгөгдөл ачааллаж байна...
-                            </div>
-                        ) : (
-                            <div className="chart-box">
-                                <Doughnut
-                                    data={dalan70HunChartData}
-                                    options={{
-                                        ...options,
-                                        cutout: "70%",
-                                        plugins: {
-                                            ...options.plugins,
-                                            centerText: true,
-                                        },
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 70 жил хадгалах санхүү (DalanJilSanhuu) */}
-                    <div className="card">
-                        <div className="card-head">
-                            <h4>📋 70 жил хадгалах - Санхүү</h4>
-                            <div className="filters">
-                                <select
-                                    value={dalan70From ?? ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setDalan70From(v);
-                                        if (v > dalan70To) setDalan70To(v);
-                                    }}
-                                    disabled={
-                                        dalan70Loading ||
-                                        yearsLoading ||
-                                        !availableYears.length
-                                    }
-                                >
-                                    {availableYears.length === 0 ? (
-                                        <option value="">...</option>
-                                    ) : (
-                                        availableYears.map((y) => (
-                                            <option
-                                                key={`d70s-from-${y}`}
-                                                value={y}
-                                            >
-                                                {y}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                                <span className="to">→</span>
-                                <select
-                                    value={dalan70To ?? ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setDalan70To(v);
-                                        if (v < dalan70From) setDalan70From(v);
-                                    }}
-                                    disabled={
-                                        dalan70Loading ||
-                                        yearsLoading ||
-                                        !availableYears.length
-                                    }
-                                >
-                                    {availableYears.length === 0 ? (
-                                        <option value="">...</option>
-                                    ) : (
-                                        availableYears.map((y) => (
-                                            <option
-                                                key={`d70s-to-${y}`}
-                                                value={y}
-                                            >
-                                                {y}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                            </div>
-                        </div>
-                        {dalan70Error && (
-                            <div className="error-msg">
-                                {dalan70Error}
-                                <button type="button" onClick={fetchDalan70}>
-                                    Дахин оролдох
-                                </button>
-                            </div>
-                        )}
-                        {dalan70Loading ? (
-                            <div className="loading-box">
-                                Өгөгдөл ачааллаж байна...
-                            </div>
-                        ) : (
-                            <div className="chart-box">
-                                <Doughnut
-                                    data={dalan70SanhuuChartData}
-                                    options={{
-                                        ...options,
-                                        cutout: "70%",
-                                        plugins: {
-                                            ...options.plugins,
-                                            centerText: true,
-                                        },
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
+                <PieGraph
+                    title="Баримт бичигт нийт хугацаа хэтэрсэн минут"
+                    data={HetersenHugatsaaCount}
+                />
+            </div>
+            {/* Hover and gradient animation CSS */}
             <style>{`
-                .GraphicWrapper {
-                    min-height: 100vh;
-                    padding: 25px;
-                    background: #f3f4f6;
-                }
+     
+          .hover-card:hover{
 
-                .header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 20px;
-                }
+transform:translateY(-6px) scale(1.02);
 
-                .card-head {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 12px;
-                    margin-bottom: 8px;
-                }
+box-shadow:
+0 20px 45px rgba(0,0,0,0.2);
 
-                .filters {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    flex-wrap: wrap;
-                }
-
-                .filters .to {
-                    color: #64748b;
-                    font-weight: 600;
-                }
-
-                .error-msg {
-                    background: #fef2f2;
-                    color: #b91c1c;
-                    padding: 12px 16px;
-                    border-radius: 8px;
-                    margin-bottom: 20px;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-
-                .error-msg button {
-                    padding: 6px 12px;
-                    border-radius: 6px;
-                    border: 1px solid #b91c1c;
-                    background: #fff;
-                    color: #b91c1c;
-                    cursor: pointer;
-                }
-
-                .loading-box {
-                    text-align: center;
-                    padding: 60px 20px;
-                    color: #6b7280;
-                }
-                    .row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-    .row {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-
-
-                .card {
-                    width: 100%;
-                    background: #fff;
-                    padding: 20px;
-                    border-radius: 14px;
-                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-                }
-
-                .card h4 {
-                    margin: 0 0 16px 0;
-                    font-size: 1rem;
-                }
-
-                .chart-box {
-                    height: 360px;
-                }
-
-                select {
-                    padding: 8px 14px;
-                    border-radius: 8px;
-                    border: 1px solid #d1d5db;
-                }
-            `}</style>
+        @keyframes gradientAnimation {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
         </div>
     );
 };

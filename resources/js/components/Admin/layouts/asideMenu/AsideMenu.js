@@ -98,6 +98,11 @@ export default function AsideMenu() {
                     url: "/get/graphic",
                     icon: "fa fa-pie-chart",
                 },
+                {
+                    name: "Харьцуулсан график үзүүлэлт",
+                    url: "/get/Comparegraphic",
+                    icon: "fa fa-chart-line",
+                },
             ],
         },
     ];
