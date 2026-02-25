@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BichigBarimt;
 use App\Models\BichigHariu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,8 +30,8 @@ class BichigHariuController extends Controller
                 'ognoo.required' => 'Огноо оруулна уу.',
             ]);
 
-            if (count($destinationIds) < 2) {
-                return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 2 бүтцийн нэгж сонгоно уу.'], 422);
+            if (count($destinationIds) < 1) {
+                return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.'], 422);
             }
 
             $userID = Auth::id();
@@ -73,6 +74,8 @@ class BichigHariuController extends Controller
                 $insert->save();
             }
 
+            BichigHariu::updateHugatsaaHetersenForBichig($req->bichigID);
+
             return response(['status' => 'success', 'msg' => 'Амжилттай хадгаллаа.'], 200);
         } catch (\Throwable $th) {
             return response(['status' => 'error', 'msg' => $th->getMessage() ?? 'Алдаа гарлаа.'], 500);
@@ -101,8 +104,8 @@ class BichigHariuController extends Controller
             if (count($ids) < 1) {
                 return response(['status' => 'error', 'msg' => 'Засах бичгийг сонгоно уу.'], 422);
             }
-            if (count($destinationIds) < 2) {
-                return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 2 бүтцийн нэгж сонгоно уу.'], 422);
+            if (count($destinationIds) < 1) {
+                return response(['status' => 'error', 'msg' => 'Хаашаа явсан хэсэгт дор хаяж 1 бүтцийн нэгж сонгоно уу.'], 422);
             }
 
             $first = BichigHariu::findOrFail($ids[0]);
@@ -150,6 +153,8 @@ class BichigHariuController extends Controller
                 $insert->save();
             }
 
+            BichigHariu::updateHugatsaaHetersenForBichig($first->bichigID);
+
             return response(['status' => 'success', 'msg' => 'Амжилттай заслаа.'], 200);
         } catch (\Throwable $th) {
             return response(['status' => 'error', 'msg' => $th->getMessage() ?? 'Алдаа гарлаа.'], 500);
@@ -160,7 +165,9 @@ class BichigHariuController extends Controller
     {
         try {
             $delete = BichigHariu::findOrFail($req->id);
+            $bichigID = $delete->bichigID;
             $delete->delete();
+            BichigHariu::updateHugatsaaHetersenForBichig($bichigID);
             return response(['status' => 'success', 'msg' => 'Амжилттай устгалаа.'], 200);
         } catch (\Throwable $th) {
             return response(['status' => 'error', 'msg' => 'Алдаа гарлаа.'], 500);

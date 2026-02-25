@@ -106,7 +106,7 @@ const YwsanBichigIndex = () => {
 
     const refreshData = () => {
         axios
-            .get("/get/bichig")
+            .get("/get/bichig", { params: { source: "ywsan" } })
             .then((res) => {
                 setRowsSelected([]);
                 setData(res.data);
@@ -542,6 +542,18 @@ const getColumns = (onPreviewPdf) => [
         },
     },
     {
+        name: "hugatsaaHetersen",
+        label: "Хугацаа хэтэрсэн",
+        options: {
+            filter: true,
+            sort: true,
+            customBodyRender: (value) => (value != null && value !== "" ? `${value} мин` : "-"),
+            setCellHeaderProps: () => ({
+                style: { backgroundColor: "#5DADE2", color: "white" },
+            }),
+        },
+    },
+    {
         name: "description",
         label: "Тайлбар",
         options: {
@@ -726,6 +738,7 @@ const excelHeaders = [
     { label: "Файлын хэмжээ", key: "fileSize" },
     { label: "Огноо", key: "ognoo" },
     { label: "Хугацаа", key: "hariuOgnoo" },
+    { label: "Хугацаа хэтэрсэн", key: "hugatsaaHetersen" },
     { label: "Тайлбар", key: "description" },
 ];
 

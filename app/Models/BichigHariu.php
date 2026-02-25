@@ -7,6 +7,27 @@ use Illuminate\Support\Facades\DB;
 
 class BichigHariu extends Model
 {
+    public static function updateHugatsaaHetersenForBichig($bichigID)
+    {
+        $bichig = BichigBarimt::find($bichigID);
+        if (!$bichig) return;
+
+        $minHariu = self::where('bichigID', $bichigID)->min('ognoo');
+        if (!$minHariu) {
+            $bichig->hugatsaaHetersen = null;
+            $bichig->save();
+            return;
+        }
+
+        $bichigTime = $bichig->ognoo ? (is_string($bichig->ognoo) ? strtotime($bichig->ognoo) : $bichig->ognoo->timestamp) : null;
+        $hariuTime = is_string($minHariu) ? strtotime($minHariu) : (is_object($minHariu) ? $minHariu->timestamp : null);
+        if ($bichigTime === null || $hariuTime === null) return;
+
+        $diffMinutes = (int) round(($hariuTime - $bichigTime) / 60);
+        $hariuOgnoo = (int) ($bichig->hariuOgnoo ?? 0);
+        $bichig->hugatsaaHetersen = $diffMinutes - $hariuOgnoo;
+        $bichig->save();
+    }
     protected $table = 'csh_bichig_hariu';
     public $timestamps = true;
 
