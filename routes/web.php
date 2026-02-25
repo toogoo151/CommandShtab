@@ -303,6 +303,8 @@ Route::post("/get/HugatsaaHetersenCount", [StatisticController::class, "Hugatsaa
 Route::post("/get/Usercount", [StatisticController::class, "UserCount"]);
 Route::post("/get/uurtirsenbichiCount", [StatisticController::class, "UurtirsenbichiCount"]);
 Route::post("/get/HariuIrsenCount", [StatisticController::class, "HariuIrsenCount"]);
+Route::post("/get/HugatsaaHetersen", [StatisticController::class, "HugatsaaHetersen"]);
+
 
 //STATISTIC END
 

@@ -37,6 +37,18 @@ class StatisticController extends Controller
 
         return $query->count();
     }
+
+    public function HugatsaaHetersen(Request $req)
+    {
+        $query = DB::table("csh_bichig")
+            ->join("users", "users.id", "=", "csh_bichig.userID");
+
+        if ($req->divisionID != 0) {
+            $query->where("users.divisionID", $req->divisionID);
+        }
+
+        return $query->sum("csh_bichig.hugatsaaHetersen");
+    }
     public function HariutaiCount(Request $req)
     {
 

@@ -13,6 +13,7 @@ const Statistic = () => {
     const [HugatsaaHetersenCount, setHugatsaaHetersenCount] = useState(0);
     const [UserCount, setUserCount] = useState(0);
     const [HariuIrsenCount, setHariuIrsenCount] = useState(0);
+    const [HugatsaaHetersen, setHugatsaaHetersen] = useState(0);
 
     const [selectedJname, setSelectedJname] = useState(0);
     const [getJname, setGetJname] = useState([]);
@@ -96,6 +97,14 @@ const Statistic = () => {
             .then((res) => {
                 console.log(res.data);
                 setHariuIrsenCount(res.data);
+            });
+        axios
+            .post("/get/HugatsaaHetersen", {
+                divisionID,
+            })
+            .then((res) => {
+                console.log(res.data);
+                setHugatsaaHetersen(res.data);
             });
     };
 
@@ -274,6 +283,13 @@ const Statistic = () => {
                     icon={MdFolder}
                     cardBg={cardBackgrounds[2]}
                     iconGradient={iconGradients[2]}
+                />
+                <StatCard
+                    title="Баримт бичигт нийт хугацаа хэтэрсэн минут"
+                    value={HugatsaaHetersen}
+                    icon={MdFolder}
+                    cardBg={cardBackgrounds[3]}
+                    iconGradient={iconGradients[3]}
                 />
             </div>
             {/* Hover and gradient animation CSS */}
