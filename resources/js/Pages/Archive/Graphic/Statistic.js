@@ -14,9 +14,14 @@ const Statistic = () => {
     const [UserCount, setUserCount] = useState(0);
     const [HariuIrsenCount, setHariuIrsenCount] = useState(0);
     const [HugatsaaHetersen, setHugatsaaHetersen] = useState(0);
+    const [HariutaiIrsenCount, setHariutaiIrsenCount] = useState(0);
+    const [HariuguiIrsenCount, setHariuguiIrsenCount] = useState(0);
 
     const [selectedJname, setSelectedJname] = useState(0);
     const [getJname, setGetJname] = useState([]);
+    const [showModal, setShowModal] = useState(false); // Modal харагдах/нуух
+    const [modalData, setModalData] = useState({}); // Modal-д харуулах өгөгдөл
+    const [modalType, setModalType] = useState("irsen"); // "irsen" эсвэл "yavsaan"
 
     useEffect(() => {
         refreshStatic(selectedJname);
@@ -46,7 +51,7 @@ const Statistic = () => {
             //             String(item.jagsaalt_turul) === String(selectedJ.jName))
             // );
         }
-    }, [selectedJname, , getJname]);
+    }, [selectedJname, getJname]);
 
     const refreshStatic = (divisionID = 0) => {
         axios
@@ -90,6 +95,23 @@ const Statistic = () => {
             .then((res) => {
                 setuurtirsenbichiCount(res.data);
             });
+
+        axios
+            .post("/get/HariutaiIrsenCount", {
+                divisionID,
+            })
+            .then((res) => {
+                setHariutaiIrsenCount(res.data);
+            });
+
+        axios
+            .post("/get/HariuguiIrsenCount", {
+                divisionID,
+            })
+            .then((res) => {
+                setHariuguiIrsenCount(res.data);
+            });
+
         axios
             .post("/get/HariuIrsenCount", {
                 divisionID,
@@ -130,11 +152,20 @@ const Statistic = () => {
         "linear-gradient(270deg, #56ab2f, #a8e063, #56ab2f, #a8e063)",
     ];
 
-    const StatCard = ({ title, value, icon: Icon, cardBg, iconGradient }) => (
+    const StatCard = ({
+        title,
+        value,
+        icon: Icon,
+        cardBg,
+        iconGradient,
+        onClick,
+    }) => (
         <div className="col-xl-3 col-lg-3 col-md-6 col-sm-12">
             <div
                 className="hover-card"
+                onClick={onClick}
                 style={{
+                    cursor: onClick ? "pointer" : "default",
                     backdropFilter: "blur(5px)",
                     background: cardBg,
                     borderRadius: "16px",
@@ -248,6 +279,16 @@ const Statistic = () => {
                     icon={MdFolder}
                     cardBg={cardBackgrounds[0]}
                     iconGradient={iconGradients[0]}
+                    onClick={() => {
+                        setModalData({
+                            HugatsaaHetersen: HugatsaaHetersenCount,
+                            HariuIrsen: HariuIrsenCount,
+                            HariutaiIrsen: HariutaiIrsenCount,
+                            HariuguiIrsen: HariuguiIrsenCount,
+                        });
+                        setShowModal(true);
+                        setModalType("irsen"); // ✅ Явсан баримт бичиг modal
+                    }}
                 />
                 <StatCard
                     title="Явсан баримт бичиг"
@@ -255,8 +296,17 @@ const Statistic = () => {
                     icon={MdFolder}
                     cardBg={cardBackgrounds[1]}
                     iconGradient={iconGradients[1]}
+                    onClick={() => {
+                        setModalData({
+                            Hariutai: HariutaiCount,
+                            Hariugui: HariuguiCount,
+                        });
+                        setModalType("yavsaan"); // ✅ Ирсэн баримт бичиг modal
+
+                        setShowModal(true);
+                    }}
                 />
-                <StatCard
+                {/* <StatCard
                     title="Баримт бичиг - Хариутай"
                     value={HariutaiCount}
                     icon={MdFolder}
@@ -283,7 +333,7 @@ const Statistic = () => {
                     icon={MdFolder}
                     cardBg={cardBackgrounds[2]}
                     iconGradient={iconGradients[2]}
-                />
+                /> */}
                 <StatCard
                     title="Баримт бичигт нийт хугацаа хэтэрсэн минут"
                     value={HugatsaaHetersen}
@@ -292,12 +342,205 @@ const Statistic = () => {
                     iconGradient={iconGradients[3]}
                 />
             </div>
-            {/* Hover and gradient animation CSS */}
+            {showModal && (
+                <div
+                    className="modal-overlay"
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        background: "rgba(0,0,0,0.7)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        zIndex: 1000,
+                        padding: "10px",
+                        boxSizing: "border-box",
+                    }}
+                    onClick={() => setShowModal(false)}
+                >
+                    <div
+                        className="modal-content"
+                        style={{
+                            background:
+                                "linear-gradient(135deg, #ffffff, #f0f4ff)",
+                            padding: "25px 30px",
+                            borderRadius: "16px",
+                            minWidth: "320px",
+                            maxWidth: "420px",
+                            width: "100%",
+                            boxShadow: "0 12px 30px rgba(0,0,0,0.25)",
+                            position: "relative",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "12px",
+                            textAlign: "center",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h5
+                            style={{
+                                margin: 0,
+                                fontWeight: 600,
+                                fontSize: "18px",
+                                color: "#1a1a2e",
+                            }}
+                        >
+                            {modalType === "yavsaan"
+                                ? "Явсан баримт бичгийн мэдээлэл"
+                                : "Ирсэн баримт бичгийн мэдээлэл"}
+                        </h5>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-around",
+                                marginTop: "10px",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    background:
+                                        "linear-gradient(135deg, #00c6ff, #0072ff)",
+                                    padding: "15px 20px",
+                                    borderRadius: "12px",
+                                    flex: 1,
+                                    marginRight: "10px",
+                                    boxShadow: "0 6px 15px rgba(0,0,0,0.15)",
+                                    color: "#fff",
+                                }}
+                            >
+                                <p style={{ margin: 0, fontSize: "14px" }}>
+                                    Хариутай
+                                </p>
+                                <h3 style={{ margin: 0, fontWeight: "bold" }}>
+                                    {modalType === "yavsaan"
+                                        ? modalData.Hariutai
+                                        : modalData.HariutaiIrsen}
+                                </h3>
+                            </div>
+
+                            <div
+                                style={{
+                                    background:
+                                        "linear-gradient(135deg, #ff6a00, #ffb347)",
+                                    padding: "15px 20px",
+                                    borderRadius: "12px",
+                                    flex: 1,
+                                    marginLeft: "10px",
+                                    boxShadow: "0 6px 15px rgba(0,0,0,0.15)",
+                                    color: "#fff",
+                                }}
+                            >
+                                <p style={{ margin: 0, fontSize: "14px" }}>
+                                    Хариугүй
+                                </p>
+                                <h3 style={{ margin: 0, fontWeight: "bold" }}>
+                                    {modalType === "yavsaan"
+                                        ? modalData.Hariugui
+                                        : modalData.HariuguiIrsen}
+                                </h3>
+                            </div>
+                        </div>
+
+                        {modalType === "irsen" && (
+                            <>
+                                <div
+                                    style={{
+                                        background:
+                                            "linear-gradient(135deg, #00c6ff, #0072ff)",
+                                        padding: "15px 20px",
+                                        borderRadius: "12px",
+                                        flex: 1,
+                                        marginTop: "10px",
+                                        boxShadow:
+                                            "0 6px 15px rgba(0,0,0,0.15)",
+                                        color: "#fff",
+                                    }}
+                                >
+                                    <p style={{ margin: 0, fontSize: "14px" }}>
+                                        Хугацаа хэтэрсэн
+                                    </p>
+                                    <h3
+                                        style={{
+                                            margin: 0,
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        {modalData.HugatsaaHetersen}
+                                    </h3>
+                                </div>
+
+                                <div
+                                    style={{
+                                        background:
+                                            "linear-gradient(135deg, #ff6a00, #ffb347)",
+                                        padding: "15px 20px",
+                                        borderRadius: "12px",
+                                        flex: 1,
+                                        marginTop: "10px",
+                                        boxShadow:
+                                            "0 6px 15px rgba(0,0,0,0.15)",
+                                        color: "#fff",
+                                    }}
+                                >
+                                    <p style={{ margin: 0, fontSize: "14px" }}>
+                                        Хариу явуулсан
+                                    </p>
+                                    <h3
+                                        style={{
+                                            margin: 0,
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        {modalData.HariuIrsen}
+                                    </h3>
+                                </div>
+                            </>
+                        )}
+
+                        <button
+                            style={{
+                                position: "absolute",
+                                top: 12,
+                                right: 12,
+                                background: "transparent",
+                                border: "none",
+                                fontSize: "20px",
+                                cursor: "pointer",
+                                color: "#333",
+                            }}
+                            onClick={() => setShowModal(false)}
+                        >
+                            &times;
+                        </button>
+                    </div>
+                </div>
+            )}
             <style>{`
         .hover-card:hover {
           transform: translateY(-4px) scale(1.02);
           box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
+          .modal-overlay {
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
 
         @keyframes gradientAnimation {
           0% { background-position: 0% 50%; }

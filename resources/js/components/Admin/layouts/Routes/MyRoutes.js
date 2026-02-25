@@ -10,6 +10,7 @@ import Irsen from "../../../../Pages/Archive/IrsenBichig/index";
 import User from "../../../../Pages/Archive/User/index";
 import Ywsan from "../../../../Pages/Archive/YwsanBichig/index";
 import Zereg from "../../../../Pages/Archive/Zereg/index";
+import CompareGraphic from "../../../../Pages/Archive/Graphic/CompareGraphic";
 
 // GANBAT NEMSEN TUR HADGALAH
 
@@ -44,7 +45,7 @@ const MyRoutes = (props) => {
             <Route path="/get/graphic" element={<Graphic />} />
             <Route path="/irsen/bichig" element={<Irsen />} />
             <Route path="/ywsan/bichig" element={<Ywsan />} />
-
+            <Route path="/get/Comparegraphic" element={<CompareGraphic />} />
 
             <Route path="*" element={<h1>Хуудас олдсонгүй</h1>} />
         </Routes>
